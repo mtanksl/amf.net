@@ -11,8 +11,8 @@ Since I did not found any good library, I've written my own.
 
 # Audience?
 
-Probably nobody. But hey, It is fun to learn and implement a protocol. I kind liked this one (but no, I will never use it again, never).
+Probably nobody. But hey, It is fun to learn and implement a protocol. I kind liked this one (but no, I will never use it again).
 
 # Specification
 
-Here is the official (Action Message Format AMF0 Specification)[https://www.adobe.com/content/dam/acom/en/devnet/pdf/amf0-file-format-specification.pdf] and (Action Message Format AMF3 Specification)[https://www.adobe.com/content/dam/acom/en/devnet/pdf/amf-file-format-spec.pdf].
+Here is the official [Action Message Format AMF0 Specification](https://www.adobe.com/content/dam/acom/en/devnet/pdf/amf0-file-format-specification.pdf) and [Action Message Format AMF3 Specification](https://www.adobe.com/content/dam/acom/en/devnet/pdf/amf-file-format-spec.pdf).

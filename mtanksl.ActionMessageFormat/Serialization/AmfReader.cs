@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Xml;
 
@@ -23,6 +21,7 @@ namespace mtanksl.ActionMessageFormat
         private List<object> objects = new List<object>();
 
         private List<Amf3Trait> traits = new List<Amf3Trait>();
+
 
         public AmfPacket ReadAmfPacket()
         {
@@ -62,6 +61,12 @@ namespace mtanksl.ActionMessageFormat
 
                     Data = data
                 } );
+
+                strings.Clear();
+
+                objects.Clear();
+
+                traits.Clear();
             }
 
             return value;
@@ -173,14 +178,14 @@ namespace mtanksl.ActionMessageFormat
                 case Amf0Type.String:
 
                     return ReadAmf0String(); 
-
+                    
                 case Amf0Type.Object:
 
                     return ReadAmf0Object();
 
                 case Amf0Type.Null:
 
-                    break;
+                    return null;
 
                 case Amf0Type.Undefined:
 
@@ -233,9 +238,16 @@ namespace mtanksl.ActionMessageFormat
             return ReadString(length);
         }
 
+        public string ReadAmf0LongString()
+        {
+            int length = ReadInt32();
+
+            return ReadString(length);
+        }
+
         public Amf0Object ReadAmf0Object()
         {
-            var value = new Amf0Object() { DynamicMembersAndValues = new Dictionary<string, object>() };
+            var value = new Amf0Object() { ClassName = "", DynamicMembersAndValues = new Dictionary<string, object>() };
 
             objects.Add(value);
 
@@ -258,6 +270,33 @@ namespace mtanksl.ActionMessageFormat
             return value;
         }
 
+        public Amf0Object ReadAmf0TypedObject()
+        {
+            string className = ReadAmf0String();
+
+            var value = new Amf0Object() { ClassName = className, DynamicMembersAndValues = new Dictionary<string, object>() };
+
+            objects.Add(value);
+
+            while (true)
+            {
+                string key = ReadAmf0String();
+
+                if (key.Length == 0)
+                {
+                    break;
+                }
+
+                object data = ReadAmf0();
+
+                value.DynamicMembersAndValues.Add(key, data);
+            }
+
+            offset += 1;
+
+            return value;
+        }
+        
         public Amf0Object ReadAmf0ObjectReference()
         {
             int reference = ReadInt32();
@@ -310,13 +349,6 @@ namespace mtanksl.ActionMessageFormat
             return value;
         }
 
-        public string ReadAmf0LongString()
-        {
-            int length = ReadInt32();
-
-            return ReadString(length);
-        }
-
         public XmlDocument ReadAmf0XmlDocument()
         {
             string xml = ReadAmf0LongString();
@@ -324,33 +356,6 @@ namespace mtanksl.ActionMessageFormat
             var value = new XmlDocument();
 
             value.LoadXml(xml);
-
-            return value;
-        }
-
-        public Amf0Object ReadAmf0TypedObject()
-        {
-            string className = ReadAmf0String();
-
-            var value = new Amf0Object() { ClassName = className, DynamicMembersAndValues = new Dictionary<string, object>() };
-
-            objects.Add(value);
-
-            while (true)
-            {
-                string key = ReadAmf0String();
-
-                if (key.Length == 0)
-                {
-                    break;
-                }
-
-                object data = ReadAmf0();
-
-                value.DynamicMembersAndValues.Add(key, data);
-            }
-
-            offset += 1;
 
             return value;
         }
@@ -367,7 +372,7 @@ namespace mtanksl.ActionMessageFormat
 
                 case Amf3Type.Null:
 
-                    break;
+                    return null;
 
                 case Amf3Type.BooleanFalse:
 
@@ -438,34 +443,28 @@ namespace mtanksl.ActionMessageFormat
         {
             byte valueA = ReadByte();
 
-            if (valueA < 128)
+            if (valueA <= 0x7F)
             {
                 return valueA;
             }
 
             byte valueB = ReadByte();
 
-            if (valueB < 128)
+            if (valueB <= 0x7F)
             {
-                return (valueA & 0x7F) << 7 | 
-                       valueB;
+                return (valueA & 0x7F) << 7 | valueB;
             }
 
             byte valueC = ReadByte();
 
-            if (valueC < 128)
+            if (valueC <= 0x7F)
             {
-                return (valueA & 0x7F) << 14 | 
-                       (valueB & 0x7F) << 7  | 
-                       valueC;
+                return (valueA & 0x7F) << 14 | (valueB & 0x7F) << 7 | valueC;
             }
 
             byte valueD = ReadByte();
 
-            return (valueA & 0x7F) << 22 | 
-                   (valueB & 0x7F) << 15 |
-                   (valueC & 0x7F) << 8  | 
-                   valueD;
+            return (valueA & 0x7F) << 22 | (valueB & 0x7F) << 15 | (valueC & 0x7F) << 8 | valueD;
         }
 
         public string ReadAmf3String()

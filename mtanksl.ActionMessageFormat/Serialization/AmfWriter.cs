@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Dynamic;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Xml;
 
@@ -25,6 +23,7 @@ namespace mtanksl.ActionMessageFormat
         private List<object> objects = new List<object>();
 
         private List<Amf3Trait> traits = new List<Amf3Trait>();
+
 
         public void WriteAmfPacket(AmfPacket value)
         {
@@ -56,7 +55,13 @@ namespace mtanksl.ActionMessageFormat
                     WriteByte( (byte)Amf0Type.Amf3 );
 
                     WriteAmf3(value[i].Data);
-                }                                
+                }     
+                
+                strings.Clear();
+
+                objects.Clear();
+
+                traits.Clear();
             }
         }
 
@@ -123,42 +128,42 @@ namespace mtanksl.ActionMessageFormat
 
         public void WriteAmf0(object value)
         {
-            if (value is short || value is int || value is long || value is decimal || value is double)
+            if (value == null)
+            {
+                WriteByte( (byte)Amf0Type.Null );
+            }
+            else if (value is byte || value is short || value is ushort || value is int || value is uint || value is long || value is ulong || value is decimal || value is double)
             {
                 WriteByte( (byte)Amf0Type.Number );
 
-                WriteDouble( (double)value );
+                WriteDouble( Convert.ToDouble(value) );
             }
             else if (value is bool)
             {
-                WriteByte( (byte)Amf0Type.Boolean);
+                WriteByte( (byte)Amf0Type.Boolean );
 
                 WriteBoolean( (bool)value );
             }
-            else if (value is string)
+            else if (value is string s)
             {
-                var s = (string)value;
-
                 if (s.Length > 65535)
                 {
-                    WriteByte( (byte)Amf0Type.LongString);
+                    WriteByte( (byte)Amf0Type.LongString );
 
                     WriteAmf0LongString(s);
                 }
                 else
                 {
-                    WriteByte( (byte)Amf0Type.String);
+                    WriteByte( (byte)Amf0Type.String );
 
                     WriteAmf0String(s);
                 }
             }
-            else if (value is Amf0Object)
+            else if (value is Amf0Object o)
             {
-                var o = (Amf0Object)value;
-
                 if ( objects.Contains(o) )
                 {
-                    WriteByte( (byte)Amf0Type.Reference);
+                    WriteByte( (byte)Amf0Type.Reference );
 
                     WriteAmf0ObjectReference(o);
                 }
@@ -166,45 +171,49 @@ namespace mtanksl.ActionMessageFormat
                 {
                     if (o.IsAnonymous)
                     {
-                        WriteByte( (byte)Amf0Type.Object);
+                        WriteByte( (byte)Amf0Type.Object );
 
                         WriteAmf0Object(o); 
                     }
                     else
                     {
-                        WriteByte( (byte)Amf0Type.TypedObject);
+                        WriteByte( (byte)Amf0Type.TypedObject );
 
-                        WriteAmf0Object(o); 
-                    }                    
+                        WriteAmf0TypedObject(o); 
+                    }
                 }
             }
             else if (value is Dictionary<string, object>)
             {
-                WriteByte( (byte)Amf0Type.EcmaArray);
+                WriteByte( (byte)Amf0Type.EcmaArray );
 
                 WriteAmf0Array( (Dictionary<string, object>)value );
             }
             else if (value is List<object>)
             {
-                WriteByte( (byte)Amf0Type.StrictArray);
+                WriteByte( (byte)Amf0Type.StrictArray );
 
                 WriteAmf0StrictArray( (List<object>)value );
             }
             else if (value is DateTime)
             {
-                WriteByte( (byte)Amf0Type.Date);
+                WriteByte( (byte)Amf0Type.Date );
 
                 WriteAmf0Date( (DateTime)value );
             }
             else if (value is XmlDocument)
             {
-                WriteByte( (byte)Amf0Type.XMLDocument);
+                WriteByte( (byte)Amf0Type.XMLDocument );
 
                 WriteAmf0XmlDocument( (XmlDocument)value );
             }
             else
             {
-                WriteByte( (byte)Amf0Type.Null);
+                var data = new Amf0Object() { ClassName = "", DynamicMembersAndValues = new Dictionary<string, object>() };
+
+                data.FromObject(value);
+
+                WriteAmf0(data);
             }
         }
 
@@ -214,10 +223,35 @@ namespace mtanksl.ActionMessageFormat
 
             WriteString(value);
         }
+        
+        public void WriteAmf0LongString(string value)
+        {
+            WriteInt32( (short)value.Length );
+
+            WriteString(value);
+        }
 
         public void WriteAmf0Object(Amf0Object value)
         {
             objects.Add(value);
+
+            foreach (var item in value.DynamicMembersAndValues)
+            {
+                WriteAmf0String(item.Key);
+
+                WriteAmf0(item.Value);
+            }
+
+            WriteAmf0String("");
+
+            WriteByte( (byte)Amf0Type.ObjectEnd);
+        }
+
+        public void WriteAmf0TypedObject(Amf0Object value)
+        {
+            objects.Add(value);
+
+            WriteAmf0String(value.ClassName);
 
             foreach (var item in value.DynamicMembersAndValues)
             {
@@ -262,14 +296,7 @@ namespace mtanksl.ActionMessageFormat
         {
             WriteDouble(value.Subtract( new DateTime(1970, 1, 1, 0, 0, 0) ).TotalMilliseconds);
 
-            WriteInt16(-1);
-        }
-
-        public void WriteAmf0LongString(string value)
-        {
-            WriteInt32( (short)value.Length );
-
-            WriteString(value);
+            WriteInt16(0);
         }
 
         public void WriteAmf0XmlDocument(XmlDocument value)
@@ -277,40 +304,24 @@ namespace mtanksl.ActionMessageFormat
             WriteAmf0LongString(value.OuterXml);
         }
 
-        public void WriteAmf0TypedObject(Amf0Object value)
-        {
-            objects.Add(value);
-
-            WriteAmf0String(value.ClassName);
-
-            foreach (var item in value.DynamicMembersAndValues)
-            {
-                WriteAmf0String(item.Key);
-
-                WriteAmf0(item.Value);
-            }
-
-            WriteAmf0String("");
-
-            WriteByte( (byte)Amf0Type.ObjectEnd);
-        }
-
         public void WriteAmf3(object value)
         {
-            if (value is bool)
+            if (value == null)
             {
-                var b = (bool)value;
-
+                WriteByte( (byte)Amf3Type.Null );
+            }
+            else if (value is bool b)
+            {
                 if (b)
                 {
-                    WriteByte( (byte)Amf3Type.BooleanTrue);
+                    WriteByte( (byte)Amf3Type.BooleanTrue );
                 }
                 else
                 {
-                    WriteByte( (byte)Amf3Type.BooleanFalse);
+                    WriteByte( (byte)Amf3Type.BooleanFalse );
                 }
             }
-            else if (value is short || value is int)
+            else if (value is byte || value is short || value is int)
             {
                 WriteByte( (byte)Amf3Type.Integer);
 
@@ -384,50 +395,47 @@ namespace mtanksl.ActionMessageFormat
             }
             else
             {
-                if (value != null)
-                {
-                    var data = new Amf3Object();
+                var data = new Amf3Object();
 
-                    data.FromObject(value);
+                data.FromObject(value);
 
-                    WriteAmf3(data);
-                }
-                else
-                {
-                    WriteByte( (byte)Amf3Type.Null);
-                }
-            }
+                WriteAmf3(data);
+              }
         }
 
         public void WriteAmf3Int32(int value)
         {
-            if (value < 128)
+            if (value >= 0x00 && value <= 0x7F)
             {
-                WriteByte( (byte)( (value & 0b00000000_00000000_00000000_01111111) >> 0  | 0b00000000_00000000_00000000_00000000) );
+                WriteByte( (byte)( ( ( ( 0x7F << 0 ) & value ) >> 0 ) | 0x00 ) );
             }
-            else if (value < 16384)
+            else if (value >= 0x80 && value <= 0x3FFF)
             {
-                WriteByte( (byte)( (value & 0b00000000_00000000_00111111_10000000) >> 7  | 0b00000000_00000000_00000000_10000000) );
+                WriteByte( (byte)( ( ( ( 0x7F << 7 ) & value ) >> 7 ) | 0x80 ) );
 
-                WriteByte( (byte)( (value & 0b00000000_00000000_00000000_01111111) >> 0  | 0b00000000_00000000_00000000_00000000) );
+                WriteByte( (byte)( ( ( ( 0x7F << 0 ) & value ) >> 0 ) | 0x00 ) );
             }
-            else if (value < 2097152)
+            else if (value >= 0x4000 && value <= 0x1FFFFF)
             {
-                WriteByte( (byte)( (value & 0b00000000_00011111_11000000_00000000) >> 14 | 0b00000000_00000000_00000000_10000000) );
+                WriteByte( (byte)( ( ( ( 0x7F << 14 ) & value ) >> 14 ) | 0x80 ) );
 
-                WriteByte( (byte)( (value & 0b00000000_00000000_00111111_10000000) >> 7  | 0b00000000_00000000_00000000_10000000) );
+                WriteByte( (byte)( ( ( ( 0x7F << 7 ) & value ) >> 7 ) | 0x80 ) );
 
-                WriteByte( (byte)( (value & 0b00000000_00000000_00000000_01111111) >> 0  | 0b00000000_00000000_00000000_00000000) );
+                WriteByte( (byte)( ( ( ( 0x7F << 0 ) & value ) >> 0 ) | 0x00 ) );
+            }
+            else if (value >= 0x200000 && value <= 0x3FFFFFFF)
+            {
+                WriteByte( (byte)( ( ( ( 0x7F << 22 ) & value ) >> 22 ) | 0x80 ) );
+
+                WriteByte( (byte)( ( ( ( 0x7F << 15 ) & value ) >> 15 ) | 0x80 ) );
+
+                WriteByte( (byte)( ( ( ( 0x7F << 8 ) & value ) >> 8 ) | 0x80 ) );
+
+                WriteByte( (byte)( ( ( ( 0xFF << 0 ) & value ) >> 0 ) | 0x00 ) );
             }
             else
             {
-                WriteByte( (byte)( (value & 0b00011111_11100000_00000000_00000000) >> 21 | 0b00000000_00000000_00000000_10000000) );
-
-                WriteByte( (byte)( (value & 0b00000000_00011111_11000000_00000000) >> 14 | 0b00000000_00000000_00000000_10000000) );
-
-                WriteByte( (byte)( (value & 0b00000000_00000000_00111111_10000000) >> 7  | 0b00000000_00000000_00000000_10000000) );
-
-                WriteByte( (byte)( (value & 0b00000000_00000000_00000000_01111111) >> 0  | 0b00000000_00000000_00000000_00000000) );
+                throw new ArgumentOutOfRangeException();
             }
         }
 

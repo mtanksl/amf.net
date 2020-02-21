@@ -12,6 +12,7 @@
     <Description>An implementation in C# of both AMF0 and AMF3 binary format that is used to serialize ActionScript object graphs.</Description>
     <Copyright>2020 mtanksl</Copyright>
     <PackageTags>amf am0 amf3 csharp implementation serialization deserialization</PackageTags>
+    <Version>1.0.1</Version>
   </PropertyGroup>
 
   <ItemGroup>

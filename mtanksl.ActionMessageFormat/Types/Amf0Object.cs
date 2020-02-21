@@ -151,7 +151,14 @@ namespace mtanksl.ActionMessageFormat
                                 value = ( (Amf0Object)value ).ToObject();
                             }
 
-                            property.SetValue(instance, Convert.ChangeType(value, property.PropertyType) );
+                            try
+                            {
+                                property.SetValue(instance, value);
+                            }
+                            catch
+                            {
+                                 property.SetValue(instance, Convert.ChangeType(value, property.PropertyType) );
+                            }
                         }
                     }
 

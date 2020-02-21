@@ -136,26 +136,29 @@ namespace mtanksl.ActionMessageFormat
 
                     deserialized = instance;
 
-                    for (int i = 0; i < Trait.Members.Count; i++)
+                    if (Trait.Members.Count == Values.Count)
                     {
-                        var property = type.GetProperties().Where(p => p.GetCustomAttributes<TraitMemberAttribute>().Where(a => a.Name == Trait.Members[i] ).Any() ).FirstOrDefault();
-
-                        if (property != null)
+                        for (int i = 0; i < Trait.Members.Count; i++)
                         {
-                            var value = Values[i];
+                            var property = type.GetProperties().Where(p => p.GetCustomAttributes<TraitMemberAttribute>().Where(a => a.Name == Trait.Members[i] ).Any() ).FirstOrDefault();
 
-                            if (value is Amf3Object)
+                            if (property != null)
                             {
-                                value = ( (Amf3Object)value ).ToObject();
-                            }
+                                var value = Values[i];
 
-                            try
-                            {
-                                property.SetValue(instance, value);
-                            }
-                            catch
-                            {
-                                 property.SetValue(instance, Convert.ChangeType(value, property.PropertyType) );
+                                if (value is Amf3Object)
+                                {
+                                    value = ( (Amf3Object)value ).ToObject();
+                                }
+
+                                try
+                                {
+                                    property.SetValue(instance, value);
+                                }
+                                catch
+                                {
+                                     property.SetValue(instance, Convert.ChangeType(value, property.PropertyType) );
+                                }
                             }
                         }
                     }

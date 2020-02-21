@@ -574,57 +574,41 @@ namespace mtanksl.ActionMessageFormat
                 {
                     traits.Add(value.Trait);
 
-                    if (value.Trait.IsDynamic)
-                    {
-                        WriteAmf3Int32(0x01 << 3 | 0x00 << 2 | 0x01 << 1 | 0x01);
-                    }
-                    else if (value.Trait.IsExternalizable)
-                    {
-                        WriteAmf3Int32(0x01 << 2 | 0x01 << 1 | 0x01);
+                    WriteAmf3Int32(value.Trait.Members.Count << 4 | (value.Trait.IsDynamic ? 0x01 : 0x00) << 3 | (value.Trait.IsExternalizable ? 0x01 : 0x00) << 2 | 0x01 << 1 | 0x01);
 
-                        WriteAmf3String(value.Trait.ClassName);
-                    }
-                    else
+                    WriteAmf3String(value.Trait.ClassName);
+
+                    foreach (var item in value.Trait.Members)
                     {
-                        WriteAmf3Int32(value.Trait.Members.Count << 4 | 0x00 << 3 | 0x00 << 2 | 0x01 << 1 | 0x01);
-
-                        WriteAmf3String(value.Trait.ClassName);
-
-                        foreach (var item in value.Trait.Members)
-                        {
-                            WriteAmf3String(item);
-                        }
+                        WriteAmf3String(item);
                     }
                 }
                 else
                 {
-                    WriteAmf3Int32(objects.IndexOf(value.Trait) << 2 | 0x00 << 1 | 0x01);
+                    WriteAmf3Int32(traits.IndexOf(value.Trait) << 2 | 0x00 << 1 | 0x01);
                 }
 
-                if (value.Trait.IsDynamic)
+                if (value.Trait.IsExternalizable)
                 {
-                    foreach (var item in value.DynamicMembersAndValues)
-                    {
-                        WriteAmf3String(item.Key);
-
-                        WriteAmf3(item.Value);
-                    }
-
-                    WriteAmf3String("");
-                }
-                else if (value.Trait.IsExternalizable)
-                {
-                    var externizable = ( (IExternalizable)value.ToObject() );
-
-                        externizable.Write(this);
-
-
+                    ( (IExternalizable)value.ToObject() ).Write(this);
                 }
                 else
                 {
                     foreach (var item in value.Values)
                     {
                         WriteAmf3(item);
+                    }
+
+                    if (value.Trait.IsDynamic)
+                    {
+                        foreach (var item in value.DynamicMembersAndValues)
+                        {
+                            WriteAmf3String(item.Key);
+
+                            WriteAmf3(item.Value);
+                        }
+
+                        WriteAmf3String("");
                     }
                 }
             }

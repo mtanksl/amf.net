@@ -609,108 +609,64 @@ namespace mtanksl.ActionMessageFormat
 
             if ( (reference & 0x01) == 0x01)
             {
-                Amf3Trait trait;
-
                 reference = reference >> 1;
+
+                Amf3Trait trait;
 
                 if ( (reference & 0x01) == 0x01)
                 {
                     reference = reference >> 1;
 
-                    if ( (reference & 0x01) == 0x01)
+                    bool isExternalizable = (reference & 0x01) == 0x01;
+
+                    reference = reference >> 1;
+
+                    bool isDynamic = (reference & 0x01) == 0x01;
+
+                    int length = reference >> 1;
+                    
+                    string name = ReadAmf3String();
+
+                    trait = new Amf3Trait()
                     {
-                        string className = ReadAmf3String();
+                        ClassName = name,
 
-                        trait = new Amf3Trait()
-                        {
-                            ClassName = className,
+                        IsDynamic = isDynamic,
 
-                            IsDynamic = false,
+                        IsExternalizable = isExternalizable,
 
-                            IsExternalizable = true,
+                        Members = new List<string>()
+                    };
 
-                            Members = new List<string>()
-                        };
+                    traits.Add(trait);
 
-                        traits.Add(trait);
-                    }
-                    else
+                    for (int i = 0; i < length; i++)
                     {
-                        reference = reference >> 1;
+                        string member = ReadAmf3String();
 
-                        if ( (reference & 0x01) == 0x01)
-                        {
-                            trait = new Amf3Trait()
-                            {
-                                ClassName = "",
-
-                                IsDynamic = true,
-
-                                IsExternalizable = false,
-
-                                Members = new List<string>()
-                            };
-
-                            traits.Add(trait);
-                        }                            
-                        else
-                        {
-                            string className = ReadAmf3String();
-
-                            int length = reference >> 1;
-
-                            trait = new Amf3Trait()
-                            {
-                                ClassName = className,
-
-                                IsDynamic = false,
-
-                                IsExternalizable = false,
-
-                                Members = new List<string>()
-                            };
-
-                            traits.Add(trait);
-
-                            for (int i = 0; i < length; i++)
-                            {
-                                string member = ReadAmf3String();
-
-                                trait.Members.Add(member);
-                            }                           
-                        }
+                        trait.Members.Add(member);
                     }
                 }
                 else
                 {
-                    trait = (Amf3Trait)objects[reference >> 1];
+                    trait = traits[reference >> 1];
                 }
 
                 var value = new Amf3Object() { Trait = trait, Values = new List<object>(), DynamicMembersAndValues = new Dictionary<string, object>() };
 
                 objects.Add(value);
-
-                if (value.Trait.IsDynamic)
-                {
-                    while (true)
-                    {
-                        string key = ReadAmf3String();
-
-                        if (key.Length == 0)
-                        {
-                            break;
-                        }
-
-                        object data = ReadAmf3();
-
-                        value.DynamicMembersAndValues.Add(key, data);
-                    }
-                } 
-                else if (value.Trait.IsExternalizable)
+                
+                if (trait.IsExternalizable)
                 {
                     var externizable = ( (IExternalizable)value.ToObject() );
 
-                        externizable.Read(this);
+				        externizable.Read(this);
+
+                    value.Trait.Members.Clear();
+
+                    value.Values.Clear();
+
+                    value.DynamicMembersAndValues.Clear();
 
                     value.Read(externizable);
                 }
@@ -721,6 +677,23 @@ namespace mtanksl.ActionMessageFormat
                         object data = ReadAmf3();
 
                         value.Values.Add(data);
+                    }
+
+                    if (trait.IsDynamic)
+                    {
+                        while (true)
+                        {
+                            string key = ReadAmf3String();
+
+                            if (key.Length == 0)
+                            {
+                                break;
+                            }
+
+                            object data = ReadAmf3();
+
+                            value.DynamicMembersAndValues.Add(key, data);
+                        }
                     }
                 }
 

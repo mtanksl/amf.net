@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 
 namespace mtanksl.ActionMessageFormat
 {
@@ -33,18 +32,25 @@ namespace mtanksl.ActionMessageFormat
 
         public void Read(object value)
         {
-            if (value is ExpandoObject)
+            var traitClass = value.GetType().GetCustomAttributes<TraitClassAttribute>().FirstOrDefault();
+
+            if (traitClass != null)
             {
-                foreach (var item in ( IDictionary<string, object> )value)
+                ClassName = traitClass.Name;
+                    
+                foreach (var property in value.GetType().GetProperties() )
                 {
-                    DynamicMembersAndValues.Add(item.Key, item.Value);
+                    var traitMember = property.GetCustomAttribute<TraitMemberAttribute>();
+
+                    if (traitMember != null)
+                    {
+                        DynamicMembersAndValues.Add(traitMember.Name, property.GetValue(value) );
+                    }
                 }
             }
             else
             {
-                var anonymous = value.GetType().GetCustomAttributes<CompilerGeneratedAttribute>().FirstOrDefault();
-
-                if (anonymous != null)
+                if (value is ExpandoObject)
                 {
                     foreach (var item in ( IDictionary<string, object> )value)
                     {
@@ -53,37 +59,105 @@ namespace mtanksl.ActionMessageFormat
                 }
                 else
                 {
-                    var traitClass = value.GetType().GetCustomAttributes<TraitClassAttribute>().FirstOrDefault();
-
-                    if (traitClass != null)
-                    {
-                        ClassName = traitClass.Name;
-                    }
-                    else
-                    {
-                        ClassName = value.GetType().Name;
-                    }
-
                     foreach (var property in value.GetType().GetProperties() )
                     {
-                        var traitMember = property.GetCustomAttribute<TraitMemberAttribute>();
-
-                        if (traitMember != null)
-                        {
-                            DynamicMembersAndValues.Add(traitMember.Name, property.GetValue(value) );
-                        }
-                        else
-                        {
-                            DynamicMembersAndValues.Add(property.Name, property.GetValue(value) );
-                        }
+                        DynamicMembersAndValues.Add(property.Name, property.GetValue(value) );
                     }
                 }
             }
         }
 
-        public object Object()
+        private object deserialized;
+
+        public object ToObject()
         {
-            throw new NotImplementedException();
+            if (deserialized != null)
+            {
+                return deserialized;
+            }
+
+            if (IsAnonymous)
+            {
+                var instance = new ExpandoObject();
+
+                deserialized = instance;
+
+                foreach (var item in DynamicMembersAndValues)
+                {
+                    ( ( IDictionary<string, object> )instance ).Add(item.Key, item.Value);
+                }
+
+                return instance;
+            }
+            else
+            {
+                Type type = null;
+
+                foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies() )
+                {
+                    bool found = false;
+
+                    try
+                    {
+                        foreach (var t in assembly.GetTypes() )
+                        {
+                            foreach (var a in t.GetCustomAttributes<TraitClassAttribute>() )
+                            {
+                                if (a.Name == ClassName)
+                                {
+                                    type = t;
+
+
+                                    found = true;
+
+                                    break;
+                                }
+                            }
+
+                            if (found)
+                            {
+                                break;
+                            }
+                        }
+                        
+                        if (found)
+                        {
+                            break;
+                        }
+                    }
+                    catch { }
+                }
+
+                if (type == null)
+                {
+                    throw new Exception("Can not instanciate class with trait name " + ClassName);
+                }
+                else
+                {
+                    var instance = Activator.CreateInstance(type);
+
+                    deserialized = instance;
+
+                    foreach (var pair in DynamicMembersAndValues)
+                    {
+                        var property = type.GetProperties().Where(p => p.GetCustomAttributes<TraitMemberAttribute>().Where(a => a.Name == pair.Key).Any() ).FirstOrDefault();
+
+                        if (property != null)
+                        {
+                            var value = pair.Value;
+
+                            if (value is Amf0Object)
+                            {
+                                value = ( (Amf0Object)value ).ToObject();
+                            }
+
+                            property.SetValue(instance, Convert.ChangeType(value, property.PropertyType) );
+                        }
+                    }
+
+                    return instance;
+                }
+            }
         }
     }
 }

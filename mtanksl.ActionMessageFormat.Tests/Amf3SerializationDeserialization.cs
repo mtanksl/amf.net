@@ -8,6 +8,53 @@ namespace mtanksl.ActionMessageFormat.Tests
     public class Amf3SerializationDeserialization
     {
         [TestMethod]
+        public void TestAmf3()
+        {
+            var value = new Test() 
+            {
+                Byte = byte.MaxValue,
+
+                False = false,
+
+                True = true,
+
+                Short = short.MaxValue,
+
+                Int = int.MaxValue,
+
+                Double = double.MaxValue,
+
+                String = "Hello World"
+            };
+
+            value.Reference = value;
+
+            var writer = new AmfWriter();
+
+                writer.WriteAmf3(value);
+
+            var reader = new AmfReader(writer.Data);
+
+                var data = (Test)( (Amf3Object)reader.ReadAmf3() ).ToObject();
+
+            Assert.AreEqual(byte.MaxValue, data.Byte);
+
+            Assert.AreEqual(false, data.False);
+
+            Assert.AreEqual(true, data.True);
+
+            Assert.AreEqual(short.MaxValue, data.Short);
+
+            Assert.AreEqual(int.MaxValue, data.Int);
+
+            Assert.AreEqual(double.MaxValue, data.Double);
+
+            Assert.AreEqual("Hello World", data.String);
+
+            Assert.AreEqual(data, data.Reference);
+        }
+
+        [TestMethod]
         public void TestAmf3Packet()
         {
             var writer = new AmfWriter();
@@ -52,7 +99,7 @@ namespace mtanksl.ActionMessageFormat.Tests
         [TestMethod]
         public void TestAmf3Int32()
         {
-            for (int i = 0; i < Math.Pow(2, 29) - 1; i++)
+            for (int i = AmfWriter.MinAmf3Int32Value; i < AmfWriter.MaxAmf3Int32Value; i++)
             {
                 var writer = new AmfWriter();
 
@@ -61,7 +108,7 @@ namespace mtanksl.ActionMessageFormat.Tests
                 var reader = new AmfReader(writer.Data);
 
                 Assert.AreEqual(i, reader.ReadAmf3Int32() );
-            }            
+            }
         }
 
         [TestMethod]
@@ -97,22 +144,34 @@ namespace mtanksl.ActionMessageFormat.Tests
                 { 
                     StrictDense = new List<object>() 
                     { 
-                        byte.MaxValue,                        
-                        false,                         
-                        true,                         
-                        short.MaxValue,                         
-                        int.MaxValue,                         
-                        double.MaxValue,                        
+                        byte.MaxValue,    
+                        
+                        false,        
+                        
+                        true,          
+                        
+                        short.MaxValue,   
+                        
+                        int.MaxValue,     
+                        
+                        double.MaxValue, 
+                        
                         "Hello World" 
                     }, 
                     SparseAssociative = new Dictionary<string, object>() 
                     {
-                        { "byte", byte.MaxValue },                        
-                        { "false", false },                         
-                        { "true", true },                         
-                        { "short", short.MaxValue },                         
-                        { "int", int.MaxValue },                        
-                        { "double", double.MaxValue },                        
+                        { "byte", byte.MaxValue },   
+                        
+                        { "false", false },          
+                        
+                        { "true", true },            
+                        
+                        { "short", short.MaxValue },    
+                        
+                        { "int", int.MaxValue },       
+                        
+                        { "double", double.MaxValue }, 
+                        
                         { "string", "Hello World" } 
                     } 
                 } );
@@ -137,6 +196,7 @@ namespace mtanksl.ActionMessageFormat.Tests
 
             Assert.AreEqual("Hello World", (string)data.StrictDense[6] );
 
+            // Warning: Numbers are serialized and deserialized as int or double
 
             Assert.AreEqual(byte.MaxValue, (int)data.SparseAssociative["byte"] );
 
@@ -175,12 +235,18 @@ namespace mtanksl.ActionMessageFormat.Tests
                     
                     DynamicMembersAndValues = new Dictionary<string, object>()
                     {
-                        { "byte", byte.MaxValue },                         
-                        { "false", false },                         
-                        { "true", true },                        
-                        { "short", short.MaxValue },                         
-                        { "int", int.MaxValue },                         
-                        { "double", double.MaxValue },                         
+                        { "byte", byte.MaxValue },      
+                        
+                        { "false", false },          
+                        
+                        { "true", true },             
+                        
+                        { "short", short.MaxValue },     
+                        
+                        { "int", int.MaxValue },       
+                        
+                        { "double", double.MaxValue },   
+                        
                         { "string", "Hello World" } 
                     } 
                 } );
@@ -221,39 +287,17 @@ namespace mtanksl.ActionMessageFormat.Tests
                         
                         IsDynamic = false, 
                         
-                        IsExternalizable = true, 
+                        IsExternalizable = true,
                         
                         Members = new List<string>()
                         {
-                            "operation",
-                            "correlationId",
-                            "correlationIdBytes",
-                            "body",
-                            "clientId",
-                            "clientIdBytes",
-                            "destination",
-                            "headers",
-                            "messageId",
-                            "messageIdBytes",
-                            "timestamp",
-                            "timeToLive"
+                            "clientId"
                         }
-                    }, 
+                    },
 
                     Values = new List<object>()
                     {
-                        0,
-                        "",
-                        null,
-                        null,
-                        "",
-                        null,
-                        "",
-                        null,
-                        "",
-                        null,
-                        0.0,
-                        0.0
+                        "Client Id"
                     },
                     
                     DynamicMembersAndValues = new Dictionary<string, object>()
@@ -263,9 +307,9 @@ namespace mtanksl.ActionMessageFormat.Tests
 
                 var data = reader.ReadAmf3Object();
 
-            // Warning: Numbers are serialized and deserialized as int or double
+            Assert.AreEqual("DSC", data.Trait.ClassName);
 
-            Assert.AreEqual("Hello World", data.Trait.ClassName);
+            Assert.AreEqual("Client Id", data.Values[ data.Trait.Members.IndexOf("clientId") ] );
         }
 
         [TestMethod]
@@ -285,24 +329,36 @@ namespace mtanksl.ActionMessageFormat.Tests
                         
                         Members = new List<string>()
                         {
-                            "byte",                            
-                            "false",                             
-                            "true",                                     
-                            "short",                             
-                            "int",                            
-                            "double",                            
+                            "byte",    
+                            
+                            "false",   
+                            
+                            "true",   
+                            
+                            "short",  
+                            
+                            "int",     
+                            
+                            "double",    
+                            
                             "string"                         
                         } 
                     }, 
                     
                     Values = new List<object>() 
                     {
-                        byte.MaxValue,                         
-                        false,                         
-                        true,                         
-                        short.MaxValue,                        
-                        int.MaxValue,                         
-                        double.MaxValue,                         
+                        byte.MaxValue,    
+                        
+                        false,          
+                        
+                        true,            
+                        
+                        short.MaxValue,   
+                        
+                        int.MaxValue,   
+                        
+                        double.MaxValue, 
+                        
                         "Hello World"
                     }, 
                     
@@ -396,11 +452,17 @@ namespace mtanksl.ActionMessageFormat.Tests
                 writer.WriteAmf3ObjectList(new List<object>()
                 {
                     byte.MaxValue, 
+
                     false, 
+
                     true,
+
                     short.MaxValue, 
+
                     int.MaxValue,
+
                     double.MaxValue, 
+
                     "Hello World"
                 } );
 
@@ -432,12 +494,18 @@ namespace mtanksl.ActionMessageFormat.Tests
 
                 writer.WriteAmf3Dictionary(new Dictionary<object, object>() 
                 {
-                    { "byte", byte.MaxValue },                     
-                    { "false", false },                    
+                    { "byte", byte.MaxValue },     
+                    
+                    { "false", false },        
+                    
                     { "true", true },
-                    { "short", short.MaxValue },                    
-                    { "int", int.MaxValue },                     
-                    { "double", double.MaxValue },                    
+
+                    { "short", short.MaxValue },  
+                    
+                    { "int", int.MaxValue },        
+                                        
+                    { "double", double.MaxValue },   
+                    
                     { "string", "Hello World" }
                 } );
 

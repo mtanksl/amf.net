@@ -8,11 +8,11 @@ namespace mtanksl.ActionMessageFormat
 {
     public class AmfWriter
     {
-        public const int MaxAmf0StringLength = 0xFFFF;
+        public const int MaxAmf0StringLength = 65535;
 
-        public const int MaxAmf3Int32Value = 2 << 29;
+        public const int MaxAmf3Int32Value = 536870911;
 
-        public const int MinAmf3Int32Value = -2 << 28;
+        public const int MinAmf3Int32Value = 0;
 
 
         private List<byte> data = new List<byte>();
@@ -30,6 +30,10 @@ namespace mtanksl.ActionMessageFormat
         private List<object> objects = new List<object>();
 
         private List<Amf3Trait> traits = new List<Amf3Trait>();
+
+        private Dictionary<object, Amf0Object> amf0References = new Dictionary<object, Amf0Object>();
+
+        private Dictionary<object, Amf3Object> amf3References = new Dictionary<object, Amf3Object>();
 
         public void WriteByte(byte value)
         {
@@ -225,11 +229,18 @@ namespace mtanksl.ActionMessageFormat
             }
             else
             {
-                var data = new Amf0Object() { ClassName = "", DynamicMembersAndValues = new Dictionary<string, object>() };
+                Amf0Object amf0Rererence;
 
-                data.Read(value);
+                if ( !amf0References.TryGetValue(value, out amf0Rererence) )
+                {
+                    amf0Rererence = new Amf0Object() { ClassName = "", DynamicMembersAndValues = new Dictionary<string, object>() };
 
-                WriteAmf0(data);
+                    amf0Rererence.Read(value);
+                    
+                    amf0References.Add(value, amf0Rererence);
+                }
+
+                WriteAmf0(amf0Rererence);
             }
         }
 
@@ -341,7 +352,7 @@ namespace mtanksl.ActionMessageFormat
             {
                 double i = Convert.ToDouble(value);
 
-                if (i < 0 || i > MaxAmf3Int32Value)
+                if (i < MinAmf3Int32Value || i > MaxAmf3Int32Value)
                 {
                     WriteByte( (byte)Amf3Type.Double);
 
@@ -422,11 +433,18 @@ namespace mtanksl.ActionMessageFormat
             }
             else
             {
-                var data = new Amf3Object() { Trait = new Amf3Trait() { ClassName = "", IsDynamic = false, IsExternalizable = false, Members = new List<string>() }, Values = new List<object>(), DynamicMembersAndValues = new Dictionary<string, object>() };
+                Amf3Object amf3Rererence;
 
-                data.Read(value);
+                if ( !amf3References.TryGetValue(value, out amf3Rererence) )
+                {
+                    amf3Rererence = new Amf3Object() { Trait = new Amf3Trait() { ClassName = "", IsDynamic = false, IsExternalizable = false, Members = new List<string>() }, Values = new List<object>(), DynamicMembersAndValues = new Dictionary<string, object>() };
 
-                WriteAmf3(data);
+                    amf3Rererence.Read(value);
+
+                    amf3References.Add(value, amf3Rererence);
+                }
+
+                WriteAmf3(amf3Rererence);
             }
         }
 
@@ -456,7 +474,7 @@ namespace mtanksl.ActionMessageFormat
                 WriteByte( (byte)( ( ( ( 0x7F << 0 ) & value ) >> 0 ) | 0x00 ) );
 
             }
-            else if (value >= 0x200000 && value <= 0x3FFFFFFF)
+            else  if (value >= 0x200000 && value <= 0x3FFFFFFF)
             {
 
                 WriteByte( (byte)( ( ( ( 0x7F << 22 ) & value ) >> 22 ) | 0x80 ) );
@@ -556,15 +574,15 @@ namespace mtanksl.ActionMessageFormat
                 {
                     traits.Add(value.Trait);
 
-                    if (value.Trait.IsExternalizable)
+                    if (value.Trait.IsDynamic)
+                    {
+                        WriteAmf3Int32(0x01 << 3 | 0x00 << 2 | 0x01 << 1 | 0x01);
+                    }
+                    else if (value.Trait.IsExternalizable)
                     {
                         WriteAmf3Int32(0x01 << 2 | 0x01 << 1 | 0x01);
 
                         WriteAmf3String(value.Trait.ClassName);
-                    }
-                    else if (value.Trait.IsDynamic)
-                    {
-                        WriteAmf3Int32(0x01 << 3 | 0x00 << 2 | 0x01 << 1 | 0x01);
                     }
                     else
                     {
@@ -583,13 +601,7 @@ namespace mtanksl.ActionMessageFormat
                     WriteAmf3Int32(objects.IndexOf(value.Trait) << 2 | 0x00 << 1 | 0x01);
                 }
 
-                if (value.Trait.IsExternalizable)
-                {
-                    var externalizable = ( (IExternalizable)value.Object() );
-                        
-                        externalizable.Write(this);
-                }
-                else if (value.Trait.IsDynamic)
+                if (value.Trait.IsDynamic)
                 {
                     foreach (var item in value.DynamicMembersAndValues)
                     {
@@ -599,6 +611,14 @@ namespace mtanksl.ActionMessageFormat
                     }
 
                     WriteAmf3String("");
+                }
+                else if (value.Trait.IsExternalizable)
+                {
+                    var externizable = ( (IExternalizable)value.ToObject() );
+
+                        externizable.Write(this);
+
+
                 }
                 else
                 {

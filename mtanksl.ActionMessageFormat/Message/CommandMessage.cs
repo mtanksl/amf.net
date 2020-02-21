@@ -1,4 +1,6 @@
-﻿namespace mtanksl.ActionMessageFormat
+﻿using System;
+
+namespace mtanksl.ActionMessageFormat
 {
     [TraitClass("DSC")]
     [TraitClass("flex.messaging.messages.CommandMessage")]
@@ -22,7 +24,7 @@
                 {
                     if ( (flag & 1) != 0)
                     {
-                        Operation = (int)reader.ReadAmf3();
+                        Operation = Convert.ToInt32( reader.ReadAmf3() );
                     }
                 }
             }

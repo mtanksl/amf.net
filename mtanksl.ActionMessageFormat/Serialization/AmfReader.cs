@@ -690,15 +690,7 @@ namespace mtanksl.ActionMessageFormat
 
                 objects.Add(value);
 
-                if (value.Trait.IsExternalizable)
-                {
-                    var externalizable = ( (IExternalizable)value.Object() );
-
-                        externalizable.Read(this);
-
-                    value.Read(externalizable);
-                }
-                else if (value.Trait.IsDynamic)
+                if (value.Trait.IsDynamic)
                 {
                     while (true)
                     {
@@ -713,6 +705,14 @@ namespace mtanksl.ActionMessageFormat
 
                         value.DynamicMembersAndValues.Add(key, data);
                     }
+                } 
+                else if (value.Trait.IsExternalizable)
+                {
+                    var externizable = ( (IExternalizable)value.ToObject() );
+
+                        externizable.Read(this);
+
+                    value.Read(externizable);
                 }
                 else
                 {

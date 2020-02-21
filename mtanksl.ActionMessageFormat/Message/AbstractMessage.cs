@@ -1,4 +1,6 @@
-﻿namespace mtanksl.ActionMessageFormat
+﻿using System;
+
+namespace mtanksl.ActionMessageFormat
 {
     public class AbstractMessage : IExternalizable
     {
@@ -66,12 +68,12 @@
 
                     if ( (flag & 32) != 0)
                     {
-                        Timestamp = (double)reader.ReadAmf3();
+                        Timestamp = Convert.ToDouble( reader.ReadAmf3() );
                     }
 
                     if ( (flag & 64) != 0)
                     {
-                        TimeToLive = (double)reader.ReadAmf3();
+                        TimeToLive = Convert.ToDouble( reader.ReadAmf3() );
                     }
                 }
                 else if (i == 1)
@@ -92,8 +94,6 @@
         public virtual void Write(AmfWriter writer)
         {
             byte flag = 0;
-
-            byte flag2 = 0;
 
             if (Body != null)
             {
@@ -130,6 +130,8 @@
                 flag |= 64;
             }
 
+            byte flag2 = 0;
+
             if (ClientIdBytes != null)
             {
                 flag2 |= 1;
@@ -139,6 +141,7 @@
             {
                 flag2 |= 2;
             }
+
 
             if (flag2 == 0)
             {

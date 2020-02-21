@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 
 namespace mtanksl.ActionMessageFormat
 {
@@ -22,23 +21,35 @@ namespace mtanksl.ActionMessageFormat
 
         public void Read(object value)
         {
-            if (value is ExpandoObject)
-            {
-                Trait.IsDynamic = true;
+            var traitClass = value.GetType().GetCustomAttributes<TraitClassAttribute>().FirstOrDefault();
 
-                foreach (var item in ( IDictionary<string, object> )value)
+            if (traitClass != null)
+            {
+                if (value is IExternalizable)
                 {
-                    DynamicMembersAndValues.Add(item.Key, item.Value);
+                    Trait.IsExternalizable = true;
+                }
+
+                Trait.ClassName = traitClass.Name;
+
+                foreach (var property in value.GetType().GetProperties() )
+                {
+                    var traitMember = property.GetCustomAttribute<TraitMemberAttribute>();
+
+                    if (traitMember != null)
+                    {
+                        Trait.Members.Add(traitMember.Name);
+
+                        Values.Add(property.GetValue(value) );
+                    }
                 }
             }
             else
             {
-                var anonymous = value.GetType().GetCustomAttributes<CompilerGeneratedAttribute>().FirstOrDefault();
+                Trait.IsDynamic = true;
 
-                if (anonymous != null)
+                if (value is ExpandoObject)
                 {
-                    Trait.IsDynamic = true;
-
                     foreach (var item in ( IDictionary<string, object> )value)
                     {
                         DynamicMembersAndValues.Add(item.Key, item.Value);
@@ -46,48 +57,105 @@ namespace mtanksl.ActionMessageFormat
                 }
                 else
                 {
-                    var traitClass = value.GetType().GetCustomAttributes<TraitClassAttribute>().FirstOrDefault();
-
-                    if (traitClass != null)
+                    foreach (var property in value.GetType().GetProperties() )
                     {
-                        Trait.ClassName = traitClass.Name;
-                    }
-                    else
-                    {
-                        Trait.ClassName = value.GetType().Name;
-                    }
-
-                    if (value is IExternalizable)
-                    {
-                        Trait.IsExternalizable = true;
-                    }
-                    else
-                    {
-                        foreach (var property in value.GetType().GetProperties() )
-                        {
-                            var traitMember = property.GetCustomAttribute<TraitMemberAttribute>();
-
-                            if (traitMember != null)
-                            {
-                                Trait.Members.Add(traitMember.Name);
-
-                                Values.Add(property.GetValue(value) );
-                            }
-                            else
-                            {
-                                Trait.Members.Add(property.Name);
-
-                                Values.Add(property.GetValue(value) );
-                            }
-                        }
+                        DynamicMembersAndValues.Add(property.Name, property.GetValue(value) );
                     }
                 }                
             }
         }
 
-        public object Object()
+        private object deserialized;
+
+        public object ToObject()
         {
-            throw new NotImplementedException();
+            if (deserialized != null)
+            {
+                return deserialized;
+            }
+
+            if (Trait.IsDynamic)
+            {
+                var instance = new ExpandoObject();
+
+                deserialized = instance;
+
+                foreach (var item in DynamicMembersAndValues)
+                {
+                    ( ( IDictionary<string, object> )instance ).Add(item.Key, item.Value);
+                }
+
+                return instance;
+            }
+            else
+            {
+                Type type = null;
+
+                foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies() )
+                {
+                    bool found = false;
+
+                    try
+                    {
+                        foreach (var t in assembly.GetTypes() )
+                        {
+                            foreach (var a in t.GetCustomAttributes<TraitClassAttribute>() )
+                            {
+                                if (a.Name == Trait.ClassName)
+                                {
+                                    type = t;
+
+
+                                    found = true;
+
+                                    break;
+                                }
+                            }
+
+                            if (found)
+                            {
+                                break;
+                            }
+                        }
+                        
+                        if (found)
+                        {
+                            break;
+                        }
+                    }
+                    catch { }
+                }
+
+                if (type == null)
+                {
+                    throw new Exception("Can not instanciate class with trait name " + Trait.ClassName);
+                }
+                else
+                {
+                    var instance = Activator.CreateInstance(type);
+
+                    deserialized = instance;
+
+                    for (int i = 0; i < Trait.Members.Count; i++)
+                    {
+                        var property = type.GetProperties().Where(p => p.GetCustomAttributes<TraitMemberAttribute>().Where(a => a.Name == Trait.Members[i] ).Any() ).FirstOrDefault();
+
+                        if (property != null)
+                        {
+                            var value = Values[i];
+
+                            if (value is Amf3Object)
+                            {
+                                value = ( (Amf3Object)value ).ToObject();
+                            }
+
+                            property.SetValue(instance, Convert.ChangeType(value, property.PropertyType) );
+                        }
+                    }
+
+                    return instance;
+                }
+            }
         }
     }
 }

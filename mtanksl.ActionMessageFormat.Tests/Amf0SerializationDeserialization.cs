@@ -8,6 +8,53 @@ namespace mtanksl.ActionMessageFormat.Tests
     public class Amf0SerializationDeserialization
     {
         [TestMethod]
+        public void TestAmf0()
+        {
+            var value = new Test() 
+            {
+                Byte = byte.MaxValue,
+
+                False = false,
+
+                True = true,
+
+                Short = short.MaxValue,
+
+                Int = int.MaxValue,
+
+                Double = double.MaxValue,
+
+                String = "Hello World"
+            };
+
+            value.Reference = value;
+
+            var writer = new AmfWriter();
+
+                writer.WriteAmf0(value);
+
+            var reader = new AmfReader(writer.Data);
+
+                var data = (Test)( (Amf0Object)reader.ReadAmf0() ).ToObject();
+
+            Assert.AreEqual(byte.MaxValue, data.Byte);
+
+            Assert.AreEqual(false, data.False);
+
+            Assert.AreEqual(true, data.True);
+
+            Assert.AreEqual(short.MaxValue, data.Short);
+
+            Assert.AreEqual(int.MaxValue, data.Int);
+
+            Assert.AreEqual(double.MaxValue, data.Double);
+
+            Assert.AreEqual("Hello World", data.String);
+
+            Assert.AreEqual(data, data.Reference);
+        }
+
+        [TestMethod]
         public void TestAmf0Packet()
         {
             var writer = new AmfWriter();
@@ -83,12 +130,18 @@ namespace mtanksl.ActionMessageFormat.Tests
                     
                     DynamicMembersAndValues = new Dictionary<string, object>()
                     {
-                        { "byte", byte.MaxValue },                     
-                        { "false", false },                     
-                        { "true", true },                    
-                        { "short", short.MaxValue },                    
-                        { "int", int.MaxValue },                     
-                        { "double", double.MaxValue },                     
+                        { "byte", byte.MaxValue },      
+                        
+                        { "false", false },        
+                        
+                        { "true", true },          
+                        
+                        { "short", short.MaxValue },   
+                        
+                        { "int", int.MaxValue },    
+                        
+                        { "double", double.MaxValue },        
+                        
                         { "string", "Hello World" } 
                     }
                 } );
@@ -127,12 +180,18 @@ namespace mtanksl.ActionMessageFormat.Tests
                     
                     DynamicMembersAndValues = new Dictionary<string, object>() 
                     {
-                        { "byte", byte.MaxValue },                         
-                        { "false", false },                        
-                        { "true", true },                         
-                        { "short", short.MaxValue },                        
-                        { "int", int.MaxValue },                        
-                        { "double", double.MaxValue },                        
+                        { "byte", byte.MaxValue },        
+                        
+                        { "false", false },           
+                        
+                        { "true", true },             
+                        
+                        { "short", short.MaxValue },     
+                        
+                        { "int", int.MaxValue },         
+                        
+                        { "double", double.MaxValue },        
+                        
                         { "string", "Hello World" } 
                     } 
                 } );
@@ -179,12 +238,18 @@ namespace mtanksl.ActionMessageFormat.Tests
 
                 writer.WriteAmf0Array(new Dictionary<string, object>() 
                 {
-                    { "byte", byte.MaxValue },                     
-                    { "false", false },                   
-                    { "true", true },                     
-                    { "short", short.MaxValue },                     
-                    { "int", int.MaxValue },                     
-                    { "double", double.MaxValue },                    
+                    { "byte", byte.MaxValue },      
+                    
+                    { "false", false },    
+                    
+                    { "true", true },      
+                    
+                    { "short", short.MaxValue },  
+                    
+                    { "int", int.MaxValue },            
+                    
+                    { "double", double.MaxValue },           
+                    
                     { "string", "Hello World" } 
                 } );
 
@@ -216,12 +281,18 @@ namespace mtanksl.ActionMessageFormat.Tests
 
                 writer.WriteAmf0StrictArray(new List<object>()
                 {
-                    byte.MaxValue,                     
-                    false,                     
-                    true,                     
-                    short.MaxValue,                     
-                    int.MaxValue,                     
-                    double.MaxValue,                     
+                    byte.MaxValue,    
+                    
+                    false,      
+                    
+                    true,         
+                    
+                    short.MaxValue,  
+                    
+                    int.MaxValue,  
+                    
+                    double.MaxValue,    
+                    
                     "Hello World" 
                 } );
 

@@ -1,17 +1,15 @@
-﻿using System.Collections.Generic;
-
-namespace mtanksl.ActionMessageFormat
+﻿namespace mtanksl.ActionMessageFormat
 {
+    [TraitClass("DSA")]
     [TraitClass("flex.messaging.messages.AsyncMessage")]
     [TraitClass("flex.messaging.messages.AsyncMessageExt")]
-    [TraitClass("DSA")]
     public class AsyncMessage : AbstractMessage
     {
         [TraitMember("correlationId")]
         public string CorrelationId { get; set; }
 
         [TraitMember("correlationIdBytes")]
-        public List<byte> CorrelationIdBytes { get; set; }
+        public byte[] CorrelationIdBytes { get; set; }
 
         public override void Read(AmfReader reader)
         {
@@ -32,7 +30,7 @@ namespace mtanksl.ActionMessageFormat
 
                     if ( (flag & 2) != 0)
                     {
-                        CorrelationIdBytes = (List<byte>)reader.ReadAmf3();
+                        CorrelationIdBytes = (byte[])reader.ReadAmf3();
                     }
                 }
             }

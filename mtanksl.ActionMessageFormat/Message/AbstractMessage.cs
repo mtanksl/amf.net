@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace mtanksl.ActionMessageFormat
+﻿namespace mtanksl.ActionMessageFormat
 {
     public class AbstractMessage : IExternalizable
     {
@@ -11,7 +9,7 @@ namespace mtanksl.ActionMessageFormat
         public string ClientId { get; set; }
 
         [TraitMember("clientIdBytes")]
-        public List<byte> ClientIdBytes { get; set; }
+        public byte[] ClientIdBytes { get; set; }
 
         [TraitMember("destination")]
         public string Destination { get; set; }
@@ -23,7 +21,7 @@ namespace mtanksl.ActionMessageFormat
         public string MessageId { get; set; }
 
         [TraitMember("messageIdBytes")]
-        public List<byte> MessageIdBytes { get; set; }
+        public byte[] MessageIdBytes { get; set; }
 
         [TraitMember("timestamp")]
         public double Timestamp { get; set; }
@@ -80,12 +78,12 @@ namespace mtanksl.ActionMessageFormat
                 {
                     if ( (flag & 1) != 0)
                     {
-                        ClientIdBytes = (List<byte>)reader.ReadAmf3();
+                        ClientIdBytes = (byte[])reader.ReadAmf3();
                     }
 
                     if ( (flag & 2) != 0)
                     {
-                        MessageIdBytes = (List<byte>)reader.ReadAmf3();
+                        MessageIdBytes = (byte[])reader.ReadAmf3();
                     }
                 }
             }

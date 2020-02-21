@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace mtanksl.ActionMessageFormat
 {
@@ -13,24 +14,14 @@ namespace mtanksl.ActionMessageFormat
         public List<object> Values { get; set; }
 
         public Dictionary<string, object> DynamicMembersAndValues { get; set; }
-        
-        public void FromObject(object value)
+
+        public override string ToString()
         {
-            Trait = new Amf3Trait()
-            {
-                ClassName = "",
+            return Trait.ToString();
+        }
 
-                IsDynamic = false,
-
-                IsExternalizable = false,
-
-                Members = new List<string>()
-            };
-
-            Values = new List<object>();
-
-            DynamicMembersAndValues = new Dictionary<string, object>();
-
+        public void Read(object value)
+        {
             if (value is ExpandoObject)
             {
                 Trait.IsDynamic = true;
@@ -42,117 +33,61 @@ namespace mtanksl.ActionMessageFormat
             }
             else
             {
-                var traitClass = value.GetType().GetCustomAttributes<TraitClassAttribute>().FirstOrDefault();
+                var anonymous = value.GetType().GetCustomAttributes<CompilerGeneratedAttribute>().FirstOrDefault();
 
-                if (traitClass == null)
+                if (anonymous != null)
                 {
-                    foreach (var property in value.GetType().GetProperties() )
-                    {
-                        Trait.Members.Add(property.Name);
+                    Trait.IsDynamic = true;
 
-                        Values.Add(property.GetValue(value) );
+                    foreach (var item in ( IDictionary<string, object> )value)
+                    {
+                        DynamicMembersAndValues.Add(item.Key, item.Value);
                     }
                 }
                 else
                 {
-                    Trait.ClassName = traitClass.Name;
+                    var traitClass = value.GetType().GetCustomAttributes<TraitClassAttribute>().FirstOrDefault();
+
+                    if (traitClass != null)
+                    {
+                        Trait.ClassName = traitClass.Name;
+                    }
+                    else
+                    {
+                        Trait.ClassName = value.GetType().Name;
+                    }
 
                     if (value is IExternalizable)
                     {
                         Trait.IsExternalizable = true;
                     }
-
-                    foreach (var property in value.GetType().GetProperties() )
+                    else
                     {
-                        var traitMember = property.GetCustomAttribute<TraitMemberAttribute>();
-
-                        if (traitMember != null)
+                        foreach (var property in value.GetType().GetProperties() )
                         {
-                            Trait.Members.Add(traitMember.Name);
+                            var traitMember = property.GetCustomAttribute<TraitMemberAttribute>();
 
-                            Values.Add(property.GetValue(value) );
-                        }
-                    }
-                }
-            }
-        }
-
-        public object ToObject()
-        {
-            if (Trait.IsDynamic)
-            {
-                var value = new ExpandoObject();
-
-                foreach (var item in DynamicMembersAndValues)
-                {
-                    ( ( IDictionary<string, object> )value ).Add(item.Key, item.Value);
-                }
-
-                return value;
-            }
-
-            if (Trait.IsAnonymous)
-            {
-                var value = new ExpandoObject();
-
-                for (int i = 0; i < Trait.Members.Count; i++)
-                {
-                    ( ( IDictionary<string, object> )value ).Add(Trait.Members[i], Values[i] );
-                }
-
-                return value;
-            }
-
-            var type = Assembly.GetExecutingAssembly().GetTypes().Where(t => t.GetCustomAttributes<TraitClassAttribute>().Where(a => a.Name == Trait.ClassName).Any() ).FirstOrDefault();
-
-            if (type == null)
-            {
-                throw new Exception("Can not instanciate class with trait name " + Trait.ClassName);
-            }
-            else
-            {
-                var value = Activator.CreateInstance(type);
-
-                if (Trait.Members.Count == Values.Count)
-                {
-                    for (int i = 0; i < Trait.Members.Count; i++)
-                    {
-                        var property = type.GetProperties().Where(p => p.GetCustomAttribute<TraitMemberAttribute>()?.Name == Trait.Members[i] ).FirstOrDefault();
-
-                        if (property != null)
-                        {
-                            var obj = Values[i];
-
-                            if (obj is Amf3Object)
+                            if (traitMember != null)
                             {
-                                obj = ( (Amf3Object)obj ).ToObject();
-                            }
+                                Trait.Members.Add(traitMember.Name);
 
-                            property.SetValue(value, obj);
+                                Values.Add(property.GetValue(value) );
+                            }
+                            else
+                            {
+                                Trait.Members.Add(property.Name);
+
+                                Values.Add(property.GetValue(value) );
+                            }
                         }
                     }
-                }
-                
-                return value;
+                }                
             }
         }
 
-        public override string ToString()
+        public object Object()
         {
-            if (Trait.IsDynamic)
-            {
-                return "Dynamic";
-            }
-            else if (Trait.IsExternalizable)
-            {
-                return "Extern " + Trait.ClassName;
-            }
-            else if (Trait.IsAnonymous)
-            {
-                return "Anonymous";
-            }
-
-            return Trait.ClassName;
+            throw new NotImplementedException();
         }
     }
 }

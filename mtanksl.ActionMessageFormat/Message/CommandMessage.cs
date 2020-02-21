@@ -1,8 +1,8 @@
 ﻿namespace mtanksl.ActionMessageFormat
 {
+    [TraitClass("DSC")]
     [TraitClass("flex.messaging.messages.CommandMessage")]
     [TraitClass("flex.messaging.messages.CommandMessageExt")]
-    [TraitClass("DSC")]
     public class CommandMessage : AsyncMessage
     {
         [TraitMember("operation")]

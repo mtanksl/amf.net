@@ -21,7 +21,78 @@ namespace mtanksl.ActionMessageFormat
         private List<object> objects = new List<object>();
 
         private List<Amf3Trait> traits = new List<Amf3Trait>();
+        
+        public byte ReadByte()
+        {
+            var value = data[offset];
 
+            offset += 1;
+
+            return value;
+        }
+
+        public bool ReadBoolean()
+        {
+            var value = BitConverter.ToBoolean(new[] { data[offset] }, 0);
+
+            offset += 1;
+
+            return value;
+        }
+
+        public short ReadInt16()
+        {
+            var value = BitConverter.ToInt16(new[] { data[offset + 1], data[offset] }, 0);
+
+            offset += 2;
+
+            return value;
+        }
+
+        public ushort ReadUInt16()
+        {
+            var value = BitConverter.ToUInt16(new[] { data[offset + 1], data[offset] }, 0);
+
+            offset += 2;
+
+            return value;
+        }
+
+        public int ReadInt32()
+        {
+            var value = BitConverter.ToInt32(new[] { data[offset + 3], data[offset + 2], data[offset + 1], data[offset] }, 0);
+
+            offset += 4;
+
+            return value;
+        }
+
+        public uint ReadUInt32()
+        {
+            var value = BitConverter.ToUInt32(new[] { data[offset + 3], data[offset + 2], data[offset + 1], data[offset] }, 0);
+
+            offset += 4;
+
+            return value;
+        }
+        
+        public double ReadDouble()
+        {
+            var value = BitConverter.ToDouble(new[] { data[offset + 7], data[offset + 6], data[offset + 5], data[offset + 4], data[offset + 3], data[offset + 2], data[offset + 1], data[offset] }, 0);
+
+            offset += 8;
+
+            return value;
+        }
+
+        public string ReadString(int length)
+        {
+            var value = new byte[length]; Buffer.BlockCopy(data, offset, value, 0, value.Length);
+
+            offset += length;
+
+            return Encoding.UTF8.GetString(value);
+        }
 
         public AmfPacket ReadAmfPacket()
         {
@@ -106,61 +177,7 @@ namespace mtanksl.ActionMessageFormat
 
             return value;
         }
-
-        public byte ReadByte()
-        {
-            var value = data[offset];
-
-            offset += 1;
-
-            return value;
-        }
-
-        public bool ReadBoolean()
-        {
-            var value = BitConverter.ToBoolean(new[] { data[offset] }, 0);
-
-            offset += 1;
-
-            return value;
-        }
-
-        public short ReadInt16()
-        {
-            var value = BitConverter.ToInt16(new[] { data[offset + 1], data[offset] }, 0);
-
-            offset += 2;
-
-            return value;
-        }
-
-        public int ReadInt32()
-        {
-            var value = BitConverter.ToInt32(new[] { data[offset + 3], data[offset + 2], data[offset + 1], data[offset] }, 0);
-
-            offset += 4;
-
-            return value;
-        }
-        
-        public double ReadDouble()
-        {
-            var value = BitConverter.ToDouble(new[] { data[offset + 7], data[offset + 6], data[offset + 5], data[offset + 4], data[offset + 3], data[offset + 2], data[offset + 1], data[offset] }, 0);
-
-            offset += 8;
-
-            return value;
-        }
-
-        public string ReadString(int length)
-        {
-            var value = new byte[length]; Buffer.BlockCopy(data, offset, value, 0, value.Length);
-
-            offset += length;
-
-            return Encoding.UTF8.GetString(value);
-        }
-        
+                
         public object ReadAmf0()
         {
             var type = (Amf0Type)ReadByte();
@@ -189,7 +206,7 @@ namespace mtanksl.ActionMessageFormat
 
                 case Amf0Type.Undefined:
 
-                    break;
+                    return null;
 
                 case Amf0Type.Reference:
 
@@ -213,7 +230,7 @@ namespace mtanksl.ActionMessageFormat
 
                 case Amf0Type.Unsuported:
 
-                    break;
+                    return null;
 
                 case Amf0Type.XMLDocument:
 
@@ -368,7 +385,7 @@ namespace mtanksl.ActionMessageFormat
             {
                 case Amf3Type.Undefined:
 
-                    break;
+                    return null;
 
                 case Amf3Type.Null:
 
@@ -419,17 +436,20 @@ namespace mtanksl.ActionMessageFormat
                     return ReadAmf3ByteArray();
 
                 case Amf3Type.VectorInt:
+
+                    return ReadAmf3Int32List();
+
                 case Amf3Type.VectorUInt:
 
-                    return ReadAmf3Int32Array();
+                    return ReadAmf3UInt32List();
 
                 case Amf3Type.VectorDouble:
 
-                    return ReadAmf3DoubleArray();
+                    return ReadAmf3DoubleList();
 
                 case Amf3Type.VectorObject:
 
-                    return ReadAmf3ObjectArray();
+                    return ReadAmf3ObjectList();
 
                 case Amf3Type.Dictionary:
 
@@ -437,6 +457,25 @@ namespace mtanksl.ActionMessageFormat
             }
 
             return null;
+        }
+
+        public List<byte> ReadFlags()
+        {
+            var flags = new List<byte>();
+
+            while (true)
+            {
+                byte flag = ReadByte();
+
+                flags.Add(flag);
+
+                if ( (flag & 128) == 0)
+                {
+                    break;
+                }
+            }
+
+            return flags;
         }
 
         public int ReadAmf3Int32()
@@ -570,79 +609,109 @@ namespace mtanksl.ActionMessageFormat
 
             if ( (reference & 0x01) == 0x01)
             {
-                reference = reference >> 1;
-
                 Amf3Trait trait;
+
+                reference = reference >> 1;
 
                 if ( (reference & 0x01) == 0x01)
                 {
                     reference = reference >> 1;
 
-                    bool isExternalizable = (reference & 0x01) == 0x01;
-
-                    reference = reference >> 1;
-
-                    bool isDynamic = (reference & 0x01) == 0x01;
-
-                    int length = reference >> 1;
-
-                    string name = ReadAmf3String();
-
-                    trait = new Amf3Trait()
+                    if ( (reference & 0x01) == 0x01)
                     {
-                        ClassName = name,
+                        string className = ReadAmf3String();
 
-                        IsDynamic = isDynamic,
+                        trait = new Amf3Trait()
+                        {
+                            ClassName = className,
 
-                        IsExternalizable = isExternalizable,
+                            IsDynamic = false,
 
-                        Members = new List<string>()
-                    };
+                            IsExternalizable = true,
 
-                    traits.Add(trait);
+                            Members = new List<string>()
+                        };
 
-                    for (int i = 0; i < length; i++)
+                        traits.Add(trait);
+                    }
+                    else
                     {
-                        string member = ReadAmf3String();
+                        reference = reference >> 1;
 
-                        trait.Members.Add(member);
+                        if ( (reference & 0x01) == 0x01)
+                        {
+                            trait = new Amf3Trait()
+                            {
+                                ClassName = "",
+
+                                IsDynamic = true,
+
+                                IsExternalizable = false,
+
+                                Members = new List<string>()
+                            };
+
+                            traits.Add(trait);
+                        }                            
+                        else
+                        {
+                            string className = ReadAmf3String();
+
+                            int length = reference >> 1;
+
+                            trait = new Amf3Trait()
+                            {
+                                ClassName = className,
+
+                                IsDynamic = false,
+
+                                IsExternalizable = false,
+
+                                Members = new List<string>()
+                            };
+
+                            traits.Add(trait);
+
+                            for (int i = 0; i < length; i++)
+                            {
+                                string member = ReadAmf3String();
+
+                                trait.Members.Add(member);
+                            }                           
+                        }
                     }
                 }
                 else
                 {
-                    trait = traits[reference >> 1];
+                    trait = (Amf3Trait)objects[reference >> 1];
                 }
 
-                var value = new Amf3Object()
-                {
-                    Trait = trait,
-
-                    Values = new List<object>(),
-
-                    DynamicMembersAndValues = new Dictionary<string, object>()
-                };
+                var value = new Amf3Object() { Trait = trait, Values = new List<object>(), DynamicMembersAndValues = new Dictionary<string, object>() };
 
                 objects.Add(value);
-                
-                if (trait.IsExternalizable)
+
+                if (value.Trait.IsExternalizable)
                 {
-                    if (value.Trait.ClassName == "flex.messaging.io.ArrayCollection" || value.Trait.ClassName == "flex.messaging.io.ObjectProxy")
+                    var externalizable = ( (IExternalizable)value.Object() );
+
+                        externalizable.Read(this);
+
+                    value.Read(externalizable);
+                }
+                else if (value.Trait.IsDynamic)
+                {
+                    while (true)
                     {
-                        value.Values.Add( ReadAmf3() );
-                    }
-                    else
-                    {
-                        var value2 = ( (IExternalizable)value.ToObject() );
+                        string key = ReadAmf3String();
 
-                        value2.Read(this);
+                        if (key.Length == 0)
+                        {
+                            break;
+                        }
 
-                        var value3 = new Amf3Object();
+                        object data = ReadAmf3();
 
-                        value3.FromObject(value2);
-
-                        value.Values = value3.Values;
-
-                        value.DynamicMembersAndValues = value3.DynamicMembersAndValues;
+                        value.DynamicMembersAndValues.Add(key, data);
                     }
                 }
                 else
@@ -653,23 +722,6 @@ namespace mtanksl.ActionMessageFormat
 
                         value.Values.Add(data);
                     }
-
-                    if (trait.IsDynamic)
-                    {
-                        while (true)
-                        {
-                            string key = ReadAmf3String();
-
-                            if (key.Length == 0)
-                            {
-                                break;
-                            }
-
-                            object data = ReadAmf3();
-
-                            value.DynamicMembersAndValues.Add(key, data);
-                        }
-                    }
                 }
 
                 return value;
@@ -678,26 +730,7 @@ namespace mtanksl.ActionMessageFormat
             return (Amf3Object)objects[reference >> 1];
         }
 
-        public List<byte> ReadFlags()
-        {
-            var flags = new List<byte>();
-
-            while (true)
-            {
-                byte flag = ReadByte();
-
-                flags.Add(flag);
-
-                if ( (flag & 128) == 0)
-                {
-                    break;
-                }
-            }
-
-            return flags;
-        }
-
-        public List<byte> ReadAmf3ByteArray()
+        public byte[] ReadAmf3ByteArray()
         {
             int reference = ReadAmf3Int32();
 
@@ -705,7 +738,7 @@ namespace mtanksl.ActionMessageFormat
             {
                 int length = reference >> 1;
 
-                var value = new List<byte>();
+                var value = new byte[length];
 
                 objects.Add(value);
                 
@@ -713,16 +746,16 @@ namespace mtanksl.ActionMessageFormat
                 {
                     byte data = ReadByte();
 
-                    value.Add(data);
+                    value[i] = data;
                 }
 
                 return value;
             }
 
-            return ( List<byte> )objects[reference >> 1];
+            return ( byte[] )objects[reference >> 1];
         }
 
-        public List<int> ReadAmf3Int32Array()
+        public List<int> ReadAmf3Int32List()
         {
             int reference = ReadAmf3Int32();
 
@@ -738,7 +771,7 @@ namespace mtanksl.ActionMessageFormat
                 
                 for (int i = 0; i < length; i++)
                 {
-                    int data = ReadAmf3Int32();
+                    int data = ReadInt32();
 
                     value.Add(data);
                 }
@@ -749,7 +782,34 @@ namespace mtanksl.ActionMessageFormat
             return ( List<int> )objects[reference >> 1];
         }
 
-        public List<double> ReadAmf3DoubleArray()
+        public List<uint> ReadAmf3UInt32List()
+        {
+            int reference = ReadAmf3Int32();
+
+            if ( (reference & 0x01) == 0x01)
+            {
+                int length = reference >> 1;
+
+                bool fixedVector = ReadBoolean();
+
+                var value = new List<uint>();
+
+                objects.Add(value);
+                
+                for (int i = 0; i < length; i++)
+                {
+                    uint data = ReadUInt32();
+
+                    value.Add(data);
+                }
+
+                return value;
+            }
+
+            return ( List<uint> )objects[reference >> 1];
+        }
+
+        public List<double> ReadAmf3DoubleList()
         {
             int reference = ReadAmf3Int32();
 
@@ -776,7 +836,7 @@ namespace mtanksl.ActionMessageFormat
             return ( List<double> )objects[reference >> 1];
         }
 
-        public List<object> ReadAmf3ObjectArray()
+        public List<object> ReadAmf3ObjectList()
         {
             int reference = ReadAmf3Int32();
 

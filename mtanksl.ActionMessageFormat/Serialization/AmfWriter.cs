@@ -8,6 +8,13 @@ namespace mtanksl.ActionMessageFormat
 {
     public class AmfWriter
     {
+        public const int MaxAmf0StringLength = 0xFFFF;
+
+        public const int MaxAmf3Int32Value = 2 << 29;
+
+        public const int MinAmf3Int32Value = -2 << 28;
+
+
         private List<byte> data = new List<byte>();
 
         public byte[] Data
@@ -24,6 +31,45 @@ namespace mtanksl.ActionMessageFormat
 
         private List<Amf3Trait> traits = new List<Amf3Trait>();
 
+        public void WriteByte(byte value)
+        {
+            data.Add(value);
+        }
+
+        public void WriteBoolean(bool value)
+        {
+            data.AddRange( BitConverter.GetBytes(value) );
+        }
+
+        public void WriteInt16(short value)
+        {
+            data.AddRange( BitConverter.GetBytes(value).Reverse() );
+        }
+
+        public void WriteUInt16(ushort value)
+        {
+            data.AddRange( BitConverter.GetBytes(value).Reverse() );
+        }
+
+        public void WriteInt32(int value)
+        {
+            data.AddRange( BitConverter.GetBytes(value).Reverse() );
+        }
+
+        public void WriteUInt32(uint value)
+        {
+            data.AddRange( BitConverter.GetBytes(value).Reverse() );
+        }
+
+        public void WriteDouble(double value)
+        {
+            data.AddRange( BitConverter.GetBytes(value).Reverse() );
+        }
+
+        public void WriteString(string value)
+        {
+            data.AddRange( Encoding.UTF8.GetBytes(value) );
+        }
 
         public void WriteAmfPacket(AmfPacket value)
         {
@@ -95,37 +141,7 @@ namespace mtanksl.ActionMessageFormat
                 traits.Clear();
             }
         }
-
-        public void WriteByte(byte value)
-        {
-            data.Add(value);
-        }
-
-        public void WriteBoolean(bool value)
-        {
-            data.AddRange( BitConverter.GetBytes(value) );
-        }
-
-        public void WriteInt16(short value)
-        {
-            data.AddRange( BitConverter.GetBytes(value).Reverse() );
-        }
-
-        public void WriteInt32(int value)
-        {
-            data.AddRange( BitConverter.GetBytes(value).Reverse() );
-        }
-
-        public void WriteDouble(double value)
-        {
-            data.AddRange( BitConverter.GetBytes(value).Reverse() );
-        }
-
-        public void WriteString(string value)
-        {
-            data.AddRange( Encoding.UTF8.GetBytes(value) );
-        }
-
+        
         public void WriteAmf0(object value)
         {
             if (value == null)
@@ -146,7 +162,7 @@ namespace mtanksl.ActionMessageFormat
             }
             else if (value is string s)
             {
-                if (s.Length > 65535)
+                if (s.Length > MaxAmf0StringLength)
                 {
                     WriteByte( (byte)Amf0Type.LongString );
 
@@ -211,7 +227,7 @@ namespace mtanksl.ActionMessageFormat
             {
                 var data = new Amf0Object() { ClassName = "", DynamicMembersAndValues = new Dictionary<string, object>() };
 
-                data.FromObject(value);
+                data.Read(value);
 
                 WriteAmf0(data);
             }
@@ -226,7 +242,7 @@ namespace mtanksl.ActionMessageFormat
         
         public void WriteAmf0LongString(string value)
         {
-            WriteInt32( (short)value.Length );
+            WriteInt32( (int)value.Length );
 
             WriteString(value);
         }
@@ -321,17 +337,22 @@ namespace mtanksl.ActionMessageFormat
                     WriteByte( (byte)Amf3Type.BooleanFalse );
                 }
             }
-            else if (value is byte || value is short || value is int)
+            else if (value is byte || value is short || value is ushort || value is int || value is uint || value is long || value is ulong || value is decimal || value is double)
             {
-                WriteByte( (byte)Amf3Type.Integer);
+                double i = Convert.ToDouble(value);
 
-                WriteAmf3Int32( (int)value);
-            }
-            else if (value is long || value is decimal || value is double)
-            {
-                WriteByte( (byte)Amf3Type.Double);
+                if (i < 0 || i > MaxAmf3Int32Value)
+                {
+                    WriteByte( (byte)Amf3Type.Double);
 
-                WriteDouble( (double)value );
+                    WriteDouble(i);
+                }
+                else
+                {
+                    WriteByte( (byte)Amf3Type.Integer);
+
+                    WriteAmf3Int32( Convert.ToInt32(value) );
+                }
             }
             else if (value is string)
             {
@@ -363,29 +384,35 @@ namespace mtanksl.ActionMessageFormat
 
                 WriteAmf3Object( (Amf3Object)value );   
             }
-            else if (value is List<byte>)
+            else if (value is byte[])
             {
                 WriteByte( (byte)Amf3Type.ByteArray);
 
-                WriteAmf3ByteArray( (List<byte>)value );   
+                WriteAmf3ByteArray( (byte[])value );   
             }
             else if (value is List<int>)
             {
                 WriteByte( (byte)Amf3Type.VectorInt);
 
-                WriteAmf3Int32Array( (List<int>)value );   
+                WriteAmf3Int32List( (List<int>)value );   
+            }
+            else if (value is List<uint>)
+            {
+                WriteByte( (byte)Amf3Type.VectorUInt);
+
+                WriteAmf3UInt32List( (List<uint>)value );   
             }
             else if (value is List<double>)
             {
                 WriteByte( (byte)Amf3Type.VectorDouble);
 
-                WriteAmf3DoubleArray( (List<double>)value );   
+                WriteAmf3DoubleList( (List<double>)value );   
             }
             else if (value is List<object>)
             {
                 WriteByte( (byte)Amf3Type.VectorObject);
 
-                WriteAmf3ObjectArray( (List<object>)value );   
+                WriteAmf3ObjectList( (List<object>)value );   
             }
             else if (value is Dictionary<object, object>)
             {
@@ -395,36 +422,43 @@ namespace mtanksl.ActionMessageFormat
             }
             else
             {
-                var data = new Amf3Object();
+                var data = new Amf3Object() { Trait = new Amf3Trait() { ClassName = "", IsDynamic = false, IsExternalizable = false, Members = new List<string>() }, Values = new List<object>(), DynamicMembersAndValues = new Dictionary<string, object>() };
 
-                data.FromObject(value);
+                data.Read(value);
 
                 WriteAmf3(data);
-              }
+            }
         }
 
         public void WriteAmf3Int32(int value)
         {
             if (value >= 0x00 && value <= 0x7F)
             {
+
                 WriteByte( (byte)( ( ( ( 0x7F << 0 ) & value ) >> 0 ) | 0x00 ) );
+
             }
             else if (value >= 0x80 && value <= 0x3FFF)
             {
+
                 WriteByte( (byte)( ( ( ( 0x7F << 7 ) & value ) >> 7 ) | 0x80 ) );
 
                 WriteByte( (byte)( ( ( ( 0x7F << 0 ) & value ) >> 0 ) | 0x00 ) );
+
             }
             else if (value >= 0x4000 && value <= 0x1FFFFF)
             {
+
                 WriteByte( (byte)( ( ( ( 0x7F << 14 ) & value ) >> 14 ) | 0x80 ) );
 
                 WriteByte( (byte)( ( ( ( 0x7F << 7 ) & value ) >> 7 ) | 0x80 ) );
 
                 WriteByte( (byte)( ( ( ( 0x7F << 0 ) & value ) >> 0 ) | 0x00 ) );
+
             }
             else if (value >= 0x200000 && value <= 0x3FFFFFFF)
             {
+
                 WriteByte( (byte)( ( ( ( 0x7F << 22 ) & value ) >> 22 ) | 0x80 ) );
 
                 WriteByte( (byte)( ( ( ( 0x7F << 15 ) & value ) >> 15 ) | 0x80 ) );
@@ -432,10 +466,7 @@ namespace mtanksl.ActionMessageFormat
                 WriteByte( (byte)( ( ( ( 0x7F << 8 ) & value ) >> 8 ) | 0x80 ) );
 
                 WriteByte( (byte)( ( ( ( 0xFF << 0 ) & value ) >> 0 ) | 0x00 ) );
-            }
-            else
-            {
-                throw new ArgumentOutOfRangeException();
+
             }
         }
 
@@ -445,13 +476,13 @@ namespace mtanksl.ActionMessageFormat
             {
                 strings.Add(value);
 
-                WriteAmf3Int32(value.Length << 1 | 1);
+                WriteAmf3Int32(value.Length << 1 | 0x01);
 
                 WriteString(value);
             }
             else
             {
-                WriteAmf3Int32(strings.IndexOf(value) << 1 | 0);
+                WriteAmf3Int32(strings.IndexOf(value) << 1 | 0x00);
             }
         }
 
@@ -461,13 +492,13 @@ namespace mtanksl.ActionMessageFormat
             {
                 objects.Add(value);
 
-                WriteAmf3Int32(value.OuterXml.Length << 1 | 1);
+                WriteAmf3Int32(value.OuterXml.Length << 1 | 0x01);
 
                 WriteString(value.OuterXml);
             }
             else
             {
-                WriteAmf3Int32(objects.IndexOf(value) << 1 | 0);
+                WriteAmf3Int32(objects.IndexOf(value) << 1 | 0x00);
             }
         }
 
@@ -477,13 +508,13 @@ namespace mtanksl.ActionMessageFormat
             {
                 objects.Add(value);
 
-                WriteAmf3Int32(1);
+                WriteAmf3Int32(0x01);
 
                 WriteDouble(value.Subtract( new DateTime(1970, 1, 1, 0, 0, 0) ).TotalMilliseconds);
             }
             else
             {
-                WriteAmf3Int32(objects.IndexOf(value) << 1 | 0);
+                WriteAmf3Int32(objects.IndexOf(value) << 1 | 0x00);
             }
         }
 
@@ -493,7 +524,7 @@ namespace mtanksl.ActionMessageFormat
             {
                 objects.Add(value);
 
-                WriteAmf3Int32(value.StrictDense.Count << 1 | 1);
+                WriteAmf3Int32(value.StrictDense.Count << 1 | 0x01);
 
                 foreach (var item in value.SparseAssociative)
                 {
@@ -511,8 +542,8 @@ namespace mtanksl.ActionMessageFormat
             }
             else
             {
-                WriteAmf3Int32(objects.IndexOf(value) << 1 | 0);
-            }
+                WriteAmf3Int32(objects.IndexOf(value) << 1 | 0x00);
+            }           
         }
 
         public void WriteAmf3Object(Amf3Object value)
@@ -525,30 +556,49 @@ namespace mtanksl.ActionMessageFormat
                 {
                     traits.Add(value.Trait);
 
-                    WriteAmf3Int32(value.Trait.Members.Count << 4 | (value.Trait.IsDynamic ? 8 : 0) | (value.Trait.IsExternalizable ? 4 : 0) | 2 | 1);
-
-                    WriteAmf3String(value.Trait.ClassName);
-
-                    foreach (var item in value.Trait.Members)
+                    if (value.Trait.IsExternalizable)
                     {
-                        WriteAmf3String(item);
+                        WriteAmf3Int32(0x01 << 2 | 0x01 << 1 | 0x01);
+
+                        WriteAmf3String(value.Trait.ClassName);
+                    }
+                    else if (value.Trait.IsDynamic)
+                    {
+                        WriteAmf3Int32(0x01 << 3 | 0x00 << 2 | 0x01 << 1 | 0x01);
+                    }
+                    else
+                    {
+                        WriteAmf3Int32(value.Trait.Members.Count << 4 | 0x00 << 3 | 0x00 << 2 | 0x01 << 1 | 0x01);
+
+                        WriteAmf3String(value.Trait.ClassName);
+
+                        foreach (var item in value.Trait.Members)
+                        {
+                            WriteAmf3String(item);
+                        }
                     }
                 }
                 else
                 {
-                    WriteAmf3Int32(traits.IndexOf(value.Trait) << 2 | 0 | 1);
+                    WriteAmf3Int32(objects.IndexOf(value.Trait) << 2 | 0x00 << 1 | 0x01);
                 }
 
                 if (value.Trait.IsExternalizable)
                 {
-                    if (value.Trait.ClassName == "flex.messaging.io.ArrayCollection" || value.Trait.ClassName == "flex.messaging.io.ObjectProxy")
+                    var externalizable = ( (IExternalizable)value.Object() );
+                        
+                        externalizable.Write(this);
+                }
+                else if (value.Trait.IsDynamic)
+                {
+                    foreach (var item in value.DynamicMembersAndValues)
                     {
-                        WriteAmf3( value.Values[0] );
+                        WriteAmf3String(item.Key);
+
+                        WriteAmf3(item.Value);
                     }
-                    else
-                    {
-                        ( (IExternalizable)value.ToObject() ).Write(this);
-                    }
+
+                    WriteAmf3String("");
                 }
                 else
                 {
@@ -556,33 +606,21 @@ namespace mtanksl.ActionMessageFormat
                     {
                         WriteAmf3(item);
                     }
-
-                    if (value.Trait.IsDynamic)
-                    {
-                        foreach (var item in value.DynamicMembersAndValues)
-                        {
-                            WriteAmf3String(item.Key);
-
-                            WriteAmf3(item.Value);
-                        }
-
-                        WriteAmf3String("");
-                    }
                 }
             }
             else
             {
-                WriteAmf3Int32(objects.IndexOf(value) << 1 | 0);
+                WriteAmf3Int32(objects.IndexOf(value) << 1 | 0x00);
             }
         }
 
-        public void WriteAmf3ByteArray(List<byte> value)
+        public void WriteAmf3ByteArray(byte[] value)
         {
             if ( !objects.Contains(value) )
             {
                 objects.Add(value);
 
-                WriteAmf3Int32(value.Count << 1 | 1);
+                WriteAmf3Int32(value.Length << 1 | 0x01);
 
                 foreach (var item in value)
                 {
@@ -591,38 +629,59 @@ namespace mtanksl.ActionMessageFormat
             }
             else
             {
-                WriteAmf3Int32(objects.IndexOf(value) << 1 | 0);
+                WriteAmf3Int32(objects.IndexOf(value) << 1 | 0x00);
             }
         }
 
-        public void WriteAmf3Int32Array(List<int> value)
+        public void WriteAmf3Int32List(List<int> value)
         {
             if ( !objects.Contains(value) )
             {
                 objects.Add(value);
 
-                WriteAmf3Int32(value.Count << 1 | 1);
+                WriteAmf3Int32(value.Count << 1 | 0x01);
 
                 WriteBoolean(false);
 
                 foreach (var item in value)
                 {
-                    WriteAmf3Int32(item);
+                    WriteInt32(item);
                 }
             }
             else
             {
-                WriteAmf3Int32(objects.IndexOf(value) << 1 | 0);
+                WriteAmf3Int32(objects.IndexOf(value) << 1 | 0x00);
             }
         }
 
-        public void WriteAmf3DoubleArray(List<double> value)
+        public void WriteAmf3UInt32List(List<uint> value)
         {
             if ( !objects.Contains(value) )
             {
                 objects.Add(value);
 
-                WriteAmf3Int32(value.Count << 1 | 1);
+                WriteAmf3Int32(value.Count << 1 | 0x01);
+
+                WriteBoolean(false);
+
+                foreach (var item in value)
+                {
+                    WriteUInt32(item);
+                }
+            }
+            else
+            {
+                WriteAmf3Int32(objects.IndexOf(value) << 1 | 0x00);
+            }
+        }
+
+        public void WriteAmf3DoubleList(List<double> value)
+        {
+            if ( !objects.Contains(value) )
+            {
+                objects.Add(value);
+
+                WriteAmf3Int32(value.Count << 1 | 0x01);
 
                 WriteBoolean(false);
 
@@ -633,20 +692,22 @@ namespace mtanksl.ActionMessageFormat
             }
             else
             {
-                WriteAmf3Int32(objects.IndexOf(value) << 1 | 0);
+                WriteAmf3Int32(objects.IndexOf(value) << 1 | 0x00);
             }
         }
 
-        public void WriteAmf3ObjectArray(List<object> value)
+        public void WriteAmf3ObjectList(List<object> value)
         {
             if ( !objects.Contains(value) )
             {
                 objects.Add(value);
 
-                WriteAmf3Int32(value.Count << 1 | 1);
+                WriteAmf3Int32(value.Count << 1 | 0x01);
 
                 WriteBoolean(false);
 
+                WriteAmf3String("*");
+                
                 foreach (var item in value)
                 {
                     WriteAmf3(item);
@@ -654,7 +715,7 @@ namespace mtanksl.ActionMessageFormat
             }
             else
             {
-                WriteAmf3Int32(objects.IndexOf(value) << 1 | 0);
+                WriteAmf3Int32(objects.IndexOf(value) << 1 | 0x00);
             }
         }
 
@@ -664,7 +725,7 @@ namespace mtanksl.ActionMessageFormat
             {
                 objects.Add(value);
 
-                WriteAmf3Int32(value.Count << 1 | 1);
+                WriteAmf3Int32(value.Count << 1 | 0x01);
 
                 WriteBoolean(false);
 
@@ -677,7 +738,7 @@ namespace mtanksl.ActionMessageFormat
             }
             else
             {
-                WriteAmf3Int32(objects.IndexOf(value) << 1 | 0);
+                WriteAmf3Int32(objects.IndexOf(value) << 1 | 0x00);
             }
         }
     }

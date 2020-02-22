@@ -1,7 +1,7 @@
 ﻿namespace mtanksl.ActionMessageFormat.Message
 {
-    [TraitClass("flex.messaging.io.ArrayCollection")]
-    public class ArrayCollection : IExternalizable
+    [TraitClass("flex.messaging.io.ArrayList")]
+    public class ArrayList : IExternalizable
     {
         [TraitMember("value")]
         public object Value { get; set; }

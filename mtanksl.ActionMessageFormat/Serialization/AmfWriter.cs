@@ -233,7 +233,12 @@ namespace mtanksl.ActionMessageFormat
 
                 if ( !amf0References.TryGetValue(value, out amf0Rererence) )
                 {
-                    amf0Rererence = new Amf0Object() { ClassName = "", DynamicMembersAndValues = new Dictionary<string, object>() };
+                    amf0Rererence = new Amf0Object() 
+                    {
+                        ClassName = "", 
+                        
+                        DynamicMembersAndValues = new Dictionary<string, object>()
+                    };
 
                     amf0Rererence.Read(value);
                     
@@ -437,7 +442,23 @@ namespace mtanksl.ActionMessageFormat
 
                 if ( !amf3References.TryGetValue(value, out amf3Rererence) )
                 {
-                    amf3Rererence = new Amf3Object() { Trait = new Amf3Trait() { ClassName = "", IsDynamic = false, IsExternalizable = false, Members = new List<string>() }, Values = new List<object>(), DynamicMembersAndValues = new Dictionary<string, object>() };
+                    amf3Rererence = new Amf3Object() 
+                    {
+                        Trait = new Amf3Trait() 
+                        { 
+                            ClassName = "", 
+                            
+                            IsDynamic = false, 
+                            
+                            IsExternalizable = false,
+                            
+                            Members = new List<string>()                        
+                        }, 
+                        
+                        Values = new List<object>(), 
+                        
+                        DynamicMembersAndValues = new Dictionary<string, object>() 
+                    };
 
                     amf3Rererence.Read(value);
 

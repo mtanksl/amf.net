@@ -264,7 +264,12 @@ namespace mtanksl.ActionMessageFormat
 
         public Amf0Object ReadAmf0Object()
         {
-            var value = new Amf0Object() { ClassName = "", DynamicMembersAndValues = new Dictionary<string, object>() };
+            var value = new Amf0Object() 
+            {
+                ClassName = "", 
+                
+                DynamicMembersAndValues = new Dictionary<string, object>()
+            };
 
             objects.Add(value);
 
@@ -291,7 +296,12 @@ namespace mtanksl.ActionMessageFormat
         {
             string className = ReadAmf0String();
 
-            var value = new Amf0Object() { ClassName = className, DynamicMembersAndValues = new Dictionary<string, object>() };
+            var value = new Amf0Object() 
+            {
+                ClassName = className, 
+                
+                DynamicMembersAndValues = new Dictionary<string, object>() 
+            };
 
             objects.Add(value);
 
@@ -572,7 +582,12 @@ namespace mtanksl.ActionMessageFormat
             {
                 int length = reference >> 1;
 
-                var value = new Amf3Array() { StrictDense = new List<object>(), SparseAssociative = new Dictionary<string, object>() };
+                var value = new Amf3Array()
+                {
+                    StrictDense = new List<object>(),
+                    
+                    SparseAssociative = new Dictionary<string, object>()
+                };
 
                 objects.Add(value);
 
@@ -623,7 +638,9 @@ namespace mtanksl.ActionMessageFormat
 
                     bool isDynamic = (reference & 0x01) == 0x01;
 
-                    int length = reference >> 1;
+                    reference = reference >> 1;
+
+                    int length = reference;
                     
                     string name = ReadAmf3String();
 
@@ -652,7 +669,14 @@ namespace mtanksl.ActionMessageFormat
                     trait = traits[reference >> 1];
                 }
 
-                var value = new Amf3Object() { Trait = trait, Values = new List<object>(), DynamicMembersAndValues = new Dictionary<string, object>() };
+                var value = new Amf3Object()
+                { 
+                    Trait = trait, 
+                    
+                    Values = new List<object>(),
+                    
+                    DynamicMembersAndValues = new Dictionary<string, object>() 
+                };
 
                 objects.Add(value);
                 

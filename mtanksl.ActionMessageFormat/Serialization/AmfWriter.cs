@@ -13,8 +13,7 @@ namespace mtanksl.ActionMessageFormat
         public const int MaxAmf3Int32Value = 536870911;
 
         public const int MinAmf3Int32Value = 0;
-
-
+        
         private List<byte> data = new List<byte>();
 
         public byte[] Data
@@ -79,12 +78,12 @@ namespace mtanksl.ActionMessageFormat
         {
             WriteInt16( (short)value.Version );
 
-            WriteAmfHeaders(value.Version, value.Headers);
+            WriteAmfHeaders(value.Headers);
 
-            WriteAmfMessages(value.Version, value.Messages);
+            WriteAmfMessages(value.Messages);
         }
 
-        public void WriteAmfHeaders(AmfVersion version, List<AmfHeader> value)
+        public void WriteAmfHeaders(List<AmfHeader> value)
         {
             WriteInt16( (short)value.Count );
 
@@ -96,16 +95,7 @@ namespace mtanksl.ActionMessageFormat
 
                 WriteInt32(-1);
 
-                if (version == AmfVersion.Amf0)
-                {
-                    WriteAmf0(value[i].Data);
-                }
-                else
-                {
-                    WriteByte( (byte)Amf0Type.Amf3 );
-
-                    WriteAmf3(value[i].Data);
-                }     
+                WriteAmf0(value[i].Data);
                 
                 strings.Clear();
 
@@ -115,7 +105,7 @@ namespace mtanksl.ActionMessageFormat
             }
         }
 
-        public void WriteAmfMessages(AmfVersion version, List<AmfMessage> value)
+        public void WriteAmfMessages(List<AmfMessage> value)
         {
             WriteInt16( (short)value.Count );
 
@@ -127,16 +117,7 @@ namespace mtanksl.ActionMessageFormat
 
                 WriteInt32(-1);
 
-                if (version == AmfVersion.Amf0)
-                {
-                    WriteAmf0(value[i].Data);
-                }
-                else
-                {
-                    WriteByte( (byte)Amf0Type.Amf3 );
-
-                    WriteAmf3(value[i].Data);
-                } 
+                WriteAmf0(value[i].Data);
 
                 strings.Clear();
 
@@ -229,6 +210,11 @@ namespace mtanksl.ActionMessageFormat
             }
             else
             {
+                WriteByte( (byte)Amf0Type.Amf3 );
+
+                WriteAmf3(value);
+                
+                /*
                 Amf0Object amf0Rererence;
 
                 if ( !amf0References.TryGetValue(value, out amf0Rererence) )
@@ -246,6 +232,7 @@ namespace mtanksl.ActionMessageFormat
                 }
 
                 WriteAmf0(amf0Rererence);
+                */
             }
         }
 
@@ -511,17 +498,26 @@ namespace mtanksl.ActionMessageFormat
 
         public void WriteAmf3String(string value)
         {
-            if ( !strings.Contains(value) )
+            if (value == "")
             {
-                strings.Add(value);
-
                 WriteAmf3Int32(value.Length << 1 | 0x01);
 
                 WriteString(value);
             }
             else
             {
-                WriteAmf3Int32(strings.IndexOf(value) << 1 | 0x00);
+                if ( !strings.Contains(value) )
+                {
+                    strings.Add(value);
+
+                    WriteAmf3Int32(value.Length << 1 | 0x01);
+
+                    WriteString(value);
+                }
+                else
+                {
+                    WriteAmf3Int32(strings.IndexOf(value) << 1 | 0x00);
+                }
             }
         }
 

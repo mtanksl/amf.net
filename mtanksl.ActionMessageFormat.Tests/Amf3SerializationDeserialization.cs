@@ -97,13 +97,13 @@ namespace mtanksl.ActionMessageFormat.Tests
 
         [Ignore]
         [TestMethod]
-        public void TestAmf3Int32()
+        public void TestAmf3UInt29()
         {
-            for (int i = AmfWriter.MinAmf3Int32Value; i < AmfWriter.MaxAmf3Int32Value; i++)
+            for (int i = AmfWriter.MinAmf3UInt29Value; i < AmfWriter.MaxAmf3UInt29Value; i++)
             {
                 var writer = new AmfWriter();
 
-                    writer.WriteAmf3Int32(i);
+                    writer.WriteAmf3UInt29(i);
 
                 var reader = new AmfReader(writer.Data);
 

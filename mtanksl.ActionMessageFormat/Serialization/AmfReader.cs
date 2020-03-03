@@ -411,7 +411,7 @@ namespace mtanksl.ActionMessageFormat
 
                 case Amf3Type.Integer:
 
-                    return ReadAmf3Int32();
+                    return ReadAmf3UInt29();
 
                 case Amf3Type.Double:
 
@@ -488,7 +488,7 @@ namespace mtanksl.ActionMessageFormat
             return flags;
         }
 
-        public int ReadAmf3Int32()
+        public int ReadAmf3UInt29()
         {
             byte valueA = ReadByte();
 
@@ -518,7 +518,7 @@ namespace mtanksl.ActionMessageFormat
 
         public string ReadAmf3String()
         {
-            int reference = ReadAmf3Int32();
+            int reference = ReadAmf3UInt29();
 
             if ( (reference & 0x01) == 0x01)
             {
@@ -536,7 +536,7 @@ namespace mtanksl.ActionMessageFormat
 
         public XmlDocument ReadAmf3XmlDocument()
         {
-            int reference = ReadAmf3Int32();
+            int reference = ReadAmf3UInt29();
 
             if ( (reference & 0x01) == 0x01)
             {
@@ -558,7 +558,7 @@ namespace mtanksl.ActionMessageFormat
 
         public DateTime ReadAmf3Date()
         {
-            int reference = ReadAmf3Int32();
+            int reference = ReadAmf3UInt29();
 
             if ( (reference & 0x01) == 0x01)
             {
@@ -576,7 +576,7 @@ namespace mtanksl.ActionMessageFormat
 
         public Amf3Array ReadAmf3Array()
         {
-            int reference = ReadAmf3Int32();
+            int reference = ReadAmf3UInt29();
 
             if ( (reference & 0x01) == 0x01)
             {
@@ -620,7 +620,7 @@ namespace mtanksl.ActionMessageFormat
 
         public Amf3Object ReadAmf3Object()
         {
-            int reference = ReadAmf3Int32();
+            int reference = ReadAmf3UInt29();
 
             if ( (reference & 0x01) == 0x01)
             {
@@ -729,7 +729,7 @@ namespace mtanksl.ActionMessageFormat
 
         public byte[] ReadAmf3ByteArray()
         {
-            int reference = ReadAmf3Int32();
+            int reference = ReadAmf3UInt29();
 
             if ( (reference & 0x01) == 0x01)
             {
@@ -754,7 +754,7 @@ namespace mtanksl.ActionMessageFormat
 
         public List<int> ReadAmf3Int32List()
         {
-            int reference = ReadAmf3Int32();
+            int reference = ReadAmf3UInt29();
 
             if ( (reference & 0x01) == 0x01)
             {
@@ -781,7 +781,7 @@ namespace mtanksl.ActionMessageFormat
 
         public List<uint> ReadAmf3UInt32List()
         {
-            int reference = ReadAmf3Int32();
+            int reference = ReadAmf3UInt29();
 
             if ( (reference & 0x01) == 0x01)
             {
@@ -808,7 +808,7 @@ namespace mtanksl.ActionMessageFormat
 
         public List<double> ReadAmf3DoubleList()
         {
-            int reference = ReadAmf3Int32();
+            int reference = ReadAmf3UInt29();
 
             if ( (reference & 0x01) == 0x01)
             {
@@ -835,7 +835,7 @@ namespace mtanksl.ActionMessageFormat
 
         public List<object> ReadAmf3ObjectList()
         {
-            int reference = ReadAmf3Int32();
+            int reference = ReadAmf3UInt29();
 
             if ( (reference & 0x01) == 0x01)
             {
@@ -864,7 +864,7 @@ namespace mtanksl.ActionMessageFormat
 
         public Dictionary<object, object> ReadAmf3Dictionary()
         {
-            int reference = ReadAmf3Int32();
+            int reference = ReadAmf3UInt29();
 
             if ( (reference & 0x01) == 0x01)
             {

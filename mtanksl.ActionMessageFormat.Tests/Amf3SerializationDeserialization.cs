@@ -107,7 +107,7 @@ namespace mtanksl.ActionMessageFormat.Tests
 
                 var reader = new AmfReader(writer.Data);
 
-                Assert.AreEqual(i, reader.ReadAmf3Int32() );
+                Assert.AreEqual(i, reader.ReadAmf3UInt29() );
             }
         }
 

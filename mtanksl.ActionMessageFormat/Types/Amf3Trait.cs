@@ -35,7 +35,7 @@ namespace mtanksl.ActionMessageFormat
                 return "Anonymous";
             }
 
-            return ClassName;
+            return "Class " + ClassName;
         }
     }
 }

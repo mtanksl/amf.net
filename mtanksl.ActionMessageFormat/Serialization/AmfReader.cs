@@ -526,7 +526,10 @@ namespace mtanksl.ActionMessageFormat
 
                 var value = ReadString(length);
 
-                strings.Add(value);
+                if (value != "")
+                {
+                    strings.Add(value);
+                }
 
                 return value;
             }
@@ -641,7 +644,7 @@ namespace mtanksl.ActionMessageFormat
                     reference = reference >> 1;
 
                     int length = reference;
-                    
+
                     string name = ReadAmf3String();
 
                     trait = new Amf3Trait()
@@ -682,7 +685,7 @@ namespace mtanksl.ActionMessageFormat
                 
                 if (trait.IsExternalizable)
                 {
-                    var externizable = ( (IExternalizable)value.ToObject() );
+                    var externizable = ( (IExternalizable)value.ToObject );
 
 				        externizable.Read(this);
 

@@ -238,14 +238,14 @@ namespace mtanksl.ActionMessageFormat
 
         public void WriteAmf0String(string value)
         {
-            WriteInt16( (short)value.Length );
+            WriteInt16( (short)Encoding.UTF8.GetByteCount(value) );
 
             WriteString(value);
         }
         
         public void WriteAmf0LongString(string value)
         {
-            WriteInt32( (int)value.Length );
+            WriteInt32( (int)Encoding.UTF8.GetByteCount(value) );
 
             WriteString(value);
         }
@@ -460,57 +460,47 @@ namespace mtanksl.ActionMessageFormat
         {
             if (value >= 0x00 && value <= 0x7F)
             {
-
-                WriteByte( (byte)( ( ( ( 0x7F << 0 ) & value ) >> 0 ) | 0x00 ) );
-
+                WriteByte( (byte)( ( ( value >> 0 ) & 0x7F) | 0x00 ) );
             }
             else if (value >= 0x80 && value <= 0x3FFF)
             {
+                WriteByte( (byte)( ( ( value >> 7 ) & 0x7F) | 0x80 ) );
 
-                WriteByte( (byte)( ( ( ( 0x7F << 7 ) & value ) >> 7 ) | 0x80 ) );
-
-                WriteByte( (byte)( ( ( ( 0x7F << 0 ) & value ) >> 0 ) | 0x00 ) );
-
+                WriteByte( (byte)( ( ( value >> 0 ) & 0x7F) | 0x00 ) );
             }
             else if (value >= 0x4000 && value <= 0x1FFFFF)
             {
+                WriteByte( (byte)( ( ( value >> 14 ) & 0x7F) | 0x80 ) );
 
-                WriteByte( (byte)( ( ( ( 0x7F << 14 ) & value ) >> 14 ) | 0x80 ) );
+                WriteByte( (byte)( ( ( value >> 7 ) & 0x7F) | 0x80 ) );
 
-                WriteByte( (byte)( ( ( ( 0x7F << 7 ) & value ) >> 7 ) | 0x80 ) );
-
-                WriteByte( (byte)( ( ( ( 0x7F << 0 ) & value ) >> 0 ) | 0x00 ) );
-
+                WriteByte( (byte)( ( ( value >> 0 ) & 0x7F) | 0x00 ) );
             }
-            else  if (value >= 0x200000 && value <= 0x3FFFFFFF)
+            else if (value >= 0x200000 && value <= 0x3FFFFFFF)
             {
+                WriteByte( (byte)( ( ( value >> 22 ) & 0x7F) | 0x80 ) );
 
-                WriteByte( (byte)( ( ( ( 0x7F << 22 ) & value ) >> 22 ) | 0x80 ) );
+                WriteByte( (byte)( ( ( value >> 15 ) & 0x7F) | 0x80 ) );
 
-                WriteByte( (byte)( ( ( ( 0x7F << 15 ) & value ) >> 15 ) | 0x80 ) );
+                WriteByte( (byte)( ( ( value >> 8 ) & 0x7F) | 0x80 ) );
 
-                WriteByte( (byte)( ( ( ( 0x7F << 8 ) & value ) >> 8 ) | 0x80 ) );
-
-                WriteByte( (byte)( ( ( ( 0xFF << 0 ) & value ) >> 0 ) | 0x00 ) );
-
+                WriteByte( (byte)( ( ( value >> 0 ) & 0xFF) | 0x00 ) );
+            }
+            else
+            {
+                throw new IndexOutOfRangeException();
             }
         }
 
         public void WriteAmf3String(string value)
         {
-            if (value == "")
-            {
-                WriteAmf3UInt29(value.Length << 1 | 0x01);
-
-                WriteString(value);
-            }
-            else
+            if (value != "")
             {
                 if ( !strings.Contains(value) )
                 {
                     strings.Add(value);
 
-                    WriteAmf3UInt29(value.Length << 1 | 0x01);
+                    WriteAmf3UInt29(Encoding.UTF8.GetByteCount(value) << 1 | 0x01);
 
                     WriteString(value);
                 }
@@ -518,6 +508,12 @@ namespace mtanksl.ActionMessageFormat
                 {
                     WriteAmf3UInt29(strings.IndexOf(value) << 1 | 0x00);
                 }
+            }
+            else
+            {
+                WriteAmf3UInt29(Encoding.UTF8.GetByteCount(value) << 1 | 0x01);
+
+                WriteString(value);
             }
         }
 
@@ -527,7 +523,7 @@ namespace mtanksl.ActionMessageFormat
             {
                 objects.Add(value);
 
-                WriteAmf3UInt29(value.OuterXml.Length << 1 | 0x01);
+                WriteAmf3UInt29(Encoding.UTF8.GetByteCount(value.OuterXml) << 1 | 0x01);
 
                 WriteString(value.OuterXml);
             }
@@ -591,23 +587,38 @@ namespace mtanksl.ActionMessageFormat
                 {
                     traits.Add(value.Trait);
 
-                    WriteAmf3UInt29(value.Trait.Members.Count << 4 | (value.Trait.IsDynamic ? 0x01 : 0x00) << 3 | (value.Trait.IsExternalizable ? 0x01 : 0x00) << 2 | 0x01 << 1 | 0x01);
+                    WriteAmf3UInt29( (value.Trait.IsExternalizable ? 0x00 : value.Trait.Members.Count) << 4 | 
+
+                                     (value.Trait.IsDynamic ? 0x01 : 0x00) << 3 | 
+
+                                     (value.Trait.IsExternalizable ? 0x01 : 0x00) << 2 | 
+
+                                     0x01 << 1 | 
+
+                                     0x01);
 
                     WriteAmf3String(value.Trait.ClassName);
 
-                    foreach (var item in value.Trait.Members)
+                    if ( !value.Trait.IsExternalizable )
                     {
-                        WriteAmf3String(item);
+                        foreach (var item in value.Trait.Members)
+                        {
+                            WriteAmf3String(item);
+                        }
                     }
                 }
                 else
                 {
-                    WriteAmf3UInt29(traits.IndexOf(value.Trait) << 2 | 0x00 << 1 | 0x01);
+                    WriteAmf3UInt29(traits.IndexOf(value.Trait) << 2 | 
+                        
+                                    0x00 << 1 | 
+                                    
+                                    0x01);
                 }
 
                 if (value.Trait.IsExternalizable)
                 {
-                    ( (IExternalizable)value.ToObject() ).Write(this);
+                    ( (IExternalizable)value.ToObject ).Write(this);
                 }
                 else
                 {
@@ -631,7 +642,9 @@ namespace mtanksl.ActionMessageFormat
             }
             else
             {
-                WriteAmf3UInt29(objects.IndexOf(value) << 1 | 0x00);
+                WriteAmf3UInt29(objects.IndexOf(value) << 1 | 
+                    
+                                0x00);
             }
         }
 

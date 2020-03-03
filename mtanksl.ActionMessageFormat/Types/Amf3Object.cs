@@ -65,107 +65,122 @@ namespace mtanksl.ActionMessageFormat
             }
         }
 
-        private object deserialized;
+        private object toObject;
 
-        public object ToObject()
+        public object ToObject
         {
-            if (deserialized != null)
+            get
             {
-                return deserialized;
-            }
-
-            if (Trait.IsDynamic)
-            {
-                var instance = new ExpandoObject();
-
-                deserialized = instance;
-
-                foreach (var item in DynamicMembersAndValues)
+                if (toObject == null)
                 {
-                    ( ( IDictionary<string, object> )instance ).Add(item.Key, item.Value);
-                }
-
-                return instance;
-            }
-            else
-            {
-                Type type = null;
-
-                foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies() )
-                {
-                    bool found = false;
-
                     try
                     {
-                        foreach (var t in assembly.GetTypes() )
+                        if (Trait.IsDynamic)
                         {
-                            foreach (var a in t.GetCustomAttributes<TraitClassAttribute>() )
+                            var instance = new ExpandoObject();
+
+                            toObject = instance;
+
+                            foreach (var item in DynamicMembersAndValues)
                             {
-                                if (a.Name == Trait.ClassName)
-                                {
-                                    type = t;
-
-
-                                    found = true;
-
-                                    break;
-                                }
-                            }
-
-                            if (found)
-                            {
-                                break;
+                                ( ( IDictionary<string, object> )instance ).Add(item.Key, item.Value);
                             }
                         }
-                        
-                        if (found)
+                        else
                         {
-                            break;
-                        }
-                    }
-                    catch { }
-                }
+                            Type type = null;
 
-                if (type == null)
-                {
-                    throw new Exception("Can not instanciate class with trait name " + Trait.ClassName);
-                }
-                else
-                {
-                    var instance = Activator.CreateInstance(type);
-
-                    deserialized = instance;
-
-                    if (Trait.Members.Count == Values.Count)
-                    {
-                        for (int i = 0; i < Trait.Members.Count; i++)
-                        {
-                            var property = type.GetProperties().Where(p => p.GetCustomAttributes<TraitMemberAttribute>().Where(a => a.Name == Trait.Members[i] ).Any() ).FirstOrDefault();
-
-                            if (property != null)
+                            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies() )
                             {
-                                var value = Values[i];
-
-                                if (value is Amf3Object)
-                                {
-                                    value = ( (Amf3Object)value ).ToObject();
-                                }
+                                bool found = false;
 
                                 try
                                 {
-                                    property.SetValue(instance, value);
+                                    foreach (var t in assembly.GetTypes() )
+                                    {
+                                        foreach (var a in t.GetCustomAttributes<TraitClassAttribute>() )
+                                        {
+                                            if (a.Name == Trait.ClassName)
+                                            {
+                                                type = t;
+                                            
+                                                found = true;
+
+                                                break;
+                                            }
+                                        }
+
+                                        if (found)
+                                        {
+                                            break;
+                                        }
+                                    }
+                        
+                                    if (found)
+                                    {
+                                        break;
+                                    }
                                 }
-                                catch
+                                catch { }
+                            }
+
+                            if (type == null)
+                            {
+                                throw new Exception("Can not instanciate class " + Trait.ClassName);
+                            }
+                            else
+                            {
+                                var instance = Activator.CreateInstance(type);
+
+                                toObject = instance;
+
+                                if (Trait.Members.Count == Values.Count)
                                 {
-                                     property.SetValue(instance, Convert.ChangeType(value, property.PropertyType) );
+                                    for (int i = 0; i < Trait.Members.Count; i++)
+                                    {
+                                        var property = type.GetProperties()
+                                                           .Where(p => p.GetCustomAttributes<TraitMemberAttribute>()
+                                                                        .Where(a => a.Name == Trait.Members[i] )
+                                                                        .Any() )
+                                                           .FirstOrDefault();
+
+                                        if (property == null)
+                                        {
+                                            throw new Exception("Can not find property " + Trait.Members[i] + " of class " + Trait.ClassName);
+                                        }
+                                        else
+                                        {
+                                            var value = Values[i];
+
+                                            if (value is Amf3Object)
+                                            {
+                                                value = ( (Amf3Object)value ).ToObject;
+                                            }
+
+                                            try
+                                            {
+                                                property.SetValue(instance, value);
+                                            }
+                                            catch
+                                            {
+                                                 property.SetValue(instance, Convert.ChangeType(value, property.PropertyType) );
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
                     }
+                    catch
+                    {
+                        toObject = null;
 
-                    return instance;
+                        throw;
+                    }
                 }
-            }
+
+                return toObject;    
+            }   
         }
     }
 }

@@ -85,7 +85,14 @@ namespace mtanksl.ActionMessageFormat
 
                             foreach (var item in DynamicMembersAndValues)
                             {
-                                ( ( IDictionary<string, object> )instance ).Add(item.Key, item.Value);
+                                var value = item.Value;
+
+                                if (value is Amf0Object)
+                                {
+                                    value = ( (Amf0Object)value ).ToObject;
+                                }
+
+                                ( ( IDictionary<string, object> )instance ).Add(item.Key, value);
                             }
                         }
                         else
@@ -152,9 +159,9 @@ namespace mtanksl.ActionMessageFormat
                                     { 
                                         var value = pair.Value;
 
-                                        if (value is Amf0Object)
+                                        if (value is Amf3Object)
                                         {
-                                            value = ( (Amf0Object)value ).ToObject;
+                                            value = ( (Amf3Object)value ).ToObject;
                                         }
 
                                         try

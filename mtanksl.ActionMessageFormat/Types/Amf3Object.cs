@@ -83,7 +83,35 @@ namespace mtanksl.ActionMessageFormat
 
                             foreach (var item in DynamicMembersAndValues)
                             {
-                                ( ( IDictionary<string, object> )instance ).Add(item.Key, item.Value);
+                                var value = item.Value;
+
+                                if (value is Amf3Object)
+                                {
+                                    value = ( (Amf3Object)value ).ToObject;
+                                }
+
+                                ( ( IDictionary<string, object> )instance ).Add(item.Key, value);
+                            }
+                        }
+                        else if (Trait.IsAnonymous)
+                        {
+                            var instance = new ExpandoObject();
+
+                            toObject = instance;
+
+                            if (Trait.Members.Count == Values.Count)
+                            {
+                                for (int i = 0; i < Trait.Members.Count; i++)
+                                {
+                                    var value = Values[i];
+
+                                    if (value is Amf3Object)
+                                    {
+                                        value = ( (Amf3Object)value ).ToObject;
+                                    }
+
+                                    ( ( IDictionary<string, object> )instance ).Add(Trait.Members[i], value);
+                                }
                             }
                         }
                         else

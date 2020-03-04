@@ -8,12 +8,12 @@ namespace mtanksl.ActionMessageFormat
 {
     public class AmfWriter
     {
-        public const int MaxAmf0StringLength = 65535;
+        public const int MinAmf3UInt29Value = 0;
 
         public const int MaxAmf3UInt29Value = 536870911;
 
-        public const int MinAmf3UInt29Value = 0;
-        
+        public const int MaxAmf0StringLength = 65535;
+
         private List<byte> data = new List<byte>();
 
         public byte[] Data
@@ -147,7 +147,7 @@ namespace mtanksl.ActionMessageFormat
             }
             else if (value is string s)
             {
-                if (s.Length > MaxAmf0StringLength)
+                if (Encoding.UTF8.GetByteCount(s) > MaxAmf0StringLength)
                 {
                     WriteByte( (byte)Amf0Type.LongString );
 

@@ -37,6 +37,8 @@ namespace mtanksl.ActionMessageFormat.Tests
 
                 var data = (Test)( (Amf3Object)reader.ReadAmf0() ).ToObject;
 
+            // Warning: Amf0Object are deserialized as Amf3Object
+
             Assert.AreEqual(byte.MaxValue, data.Byte);
 
             Assert.AreEqual(false, data.False);

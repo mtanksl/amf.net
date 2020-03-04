@@ -479,7 +479,7 @@ namespace mtanksl.ActionMessageFormat
 
                 flags.Add(flag);
 
-                if ( (flag & 128) == 0)
+                if ( (flag & 0x80) == 0x00)
                 {
                     break;
                 }

@@ -2,8 +2,8 @@
 {
     public interface IAmfObject
     {
-        void FromObject(object value);
-
         object ToObject();
+
+        object ToObject(AmfSerializer serializer);
     }
 }

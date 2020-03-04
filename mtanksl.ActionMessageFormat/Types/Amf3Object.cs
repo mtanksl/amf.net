@@ -69,56 +69,52 @@ namespace mtanksl.ActionMessageFormat
 
         public object ToObject()
         {
+            return ToObject(AmfSerializer.Default);
+        }
+
+        public object ToObject(AmfSerializer serializer)
+        {
             if (toObject == null)
             {
-                object instance;
-
-                if (Trait.IsDynamic)
+                try
                 {
-                    instance = new ExpandoObject();
-
-                    foreach (var item in DynamicMembersAndValues)
+                    if (Trait.IsDynamic)
                     {
-                        var value = item.Value;
+                        var instance = new ExpandoObject();
 
-                        if (value is IAmfObject)
+                        toObject = instance;
+
+                        foreach (var item in DynamicMembersAndValues)
                         {
-                            value = ( (IAmfObject)value ).ToObject();
+                            ( (IDictionary<string, object>)instance ).Add(item.Key, serializer.Normalize(item.Value) );
                         }
-
-                        ( ( IDictionary<string, object> )instance ).Add(item.Key, value);
                     }
-                }
-                else if (Trait.IsAnonymous)
-                {
-                    instance = new ExpandoObject();
-
-                    if (Trait.Members.Count == Values.Count)
+                    else if (Trait.IsAnonymous)
                     {
-                        for (int i = 0; i < Trait.Members.Count; i++)
-                        {
-                            var value = Values[i];
+                        var instance = new ExpandoObject();
 
-                            if (value is IAmfObject)
+                        toObject = instance;
+
+                        if (Trait.Members.Count == Values.Count)
+                        {
+                            for (int i = 0; i < Trait.Members.Count; i++)
                             {
-                                value = ( (IAmfObject)value ).ToObject();
+                                ( (IDictionary<string, object>)instance ).Add(Trait.Members[i], serializer.Normalize(Values[i] ) );
                             }
-
-                            ( (IDictionary<string, object> )instance ).Add(Trait.Members[i], value);
                         }
-                    }
-                }
-                else
-                {
-                    var type = Util.GetTypeByTraitClassName(Trait.ClassName);
-
-                    if (type == null)
-                    {
-                        throw new Exception("Can not instanciate class " + Trait.ClassName);
                     }
                     else
                     {
-                        instance = Activator.CreateInstance(type);
+                        var type = AmfSerializer.GetTypeByTraitClassName(Trait.ClassName);
+
+                        if (type == null)
+                        {
+                            throw new Exception("Can not find class " + Trait.ClassName);
+                        }
+                    
+                        var instance = Activator.CreateInstance(type);
+
+                        toObject = instance;
 
                         if (Trait.Members.Count == Values.Count)
                         {
@@ -126,14 +122,16 @@ namespace mtanksl.ActionMessageFormat
                             {
                                 var property = type.GetProperties().Where(p => p.GetCustomAttributes<TraitMemberAttribute>().Where(a => a.Name == Trait.Members[i] ).Any() ).FirstOrDefault();
 
-                                if (property != null)
+                                if (property == null)
                                 {
-                                    var value = Values[i];
-
-                                    if (value is IAmfObject)
+                                    if (serializer.ThrowIfPropertyNotFound)
                                     {
-                                        value = ( (IAmfObject)value ).ToObject();
+                                        throw new Exception("Can not find property " + Trait.Members[i] + " in class " + Trait.ClassName);
                                     }
+                                }
+                                else
+                                { 
+                                    var value = serializer.Normalize(Values[i] );
 
                                     try
                                     {
@@ -144,15 +142,19 @@ namespace mtanksl.ActionMessageFormat
                                         property.SetValue(instance, Convert.ChangeType(value, property.PropertyType) );
                                     }
                                 }
-                            }
+                            }                        
                         }
                     }
                 }
+                catch
+                {
+                    toObject = null;
 
-                toObject = instance;
+                    throw;
+                }
             }
 
-            return toObject; 
-        }   
+            return toObject;
+        }
     }
 }

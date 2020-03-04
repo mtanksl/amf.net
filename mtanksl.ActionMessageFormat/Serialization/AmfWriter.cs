@@ -213,7 +213,7 @@ namespace mtanksl.ActionMessageFormat
                 WriteByte( (byte)Amf0Type.Amf3 );
 
                 WriteAmf3(value);
-                
+
                 /*
                 Amf0Object amf0Rererence;
 
@@ -226,8 +226,8 @@ namespace mtanksl.ActionMessageFormat
                         DynamicMembersAndValues = new Dictionary<string, object>()
                     };
 
-                    amf0Rererence.Read(value);
-                    
+                    amf0Rererence.FromObject(value);
+
                     amf0References.Add(value, amf0Rererence);
                 }
 

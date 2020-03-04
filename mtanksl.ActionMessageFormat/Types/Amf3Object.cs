@@ -24,14 +24,14 @@ namespace mtanksl.ActionMessageFormat
             var traitClass = value.GetType().GetCustomAttributes<TraitClassAttribute>().FirstOrDefault();
 
             if (traitClass != null)
-            {
+            {               
                 if (value is IExternalizable)
                 {
                     Trait.IsExternalizable = true;
                 }
 
                 Trait.ClassName = traitClass.Name;
-
+                
                 foreach (var property in value.GetType().GetProperties() )
                 {
                     var traitMember = property.GetCustomAttribute<TraitMemberAttribute>();
@@ -67,6 +67,16 @@ namespace mtanksl.ActionMessageFormat
 
         private object toObject;
 
+        public T ToObject<T>()
+        {
+            return (T)ToObject();
+        }
+
+        public T ToObject<T>(AmfSerializer serializer)
+        {
+            return (T)ToObject(serializer);
+        }
+
         public object ToObject()
         {
             return ToObject(AmfSerializer.Default);
@@ -95,12 +105,9 @@ namespace mtanksl.ActionMessageFormat
 
                         toObject = instance;
 
-                        if (Trait.Members.Count == Values.Count)
+                        for (int i = 0; i < Trait.Members.Count; i++)
                         {
-                            for (int i = 0; i < Trait.Members.Count; i++)
-                            {
-                                ( (IDictionary<string, object>)instance ).Add(Trait.Members[i], serializer.Normalize(Values[i] ) );
-                            }
+                            ( (IDictionary<string, object>)instance ).Add(Trait.Members[i], serializer.Normalize(Values[i] ) );
                         }
                     }
                     else
@@ -116,33 +123,30 @@ namespace mtanksl.ActionMessageFormat
 
                         toObject = instance;
 
-                        if (Trait.Members.Count == Values.Count)
+                        for (int i = 0; i < Trait.Members.Count; i++)
                         {
-                            for (int i = 0; i < Trait.Members.Count; i++)
+                            var property = type.GetProperties().Where(p => p.GetCustomAttributes<TraitMemberAttribute>().Where(a => a.Name == Trait.Members[i] ).Any() ).FirstOrDefault();
+
+                            if (property == null)
                             {
-                                var property = type.GetProperties().Where(p => p.GetCustomAttributes<TraitMemberAttribute>().Where(a => a.Name == Trait.Members[i] ).Any() ).FirstOrDefault();
-
-                                if (property == null)
+                                if (serializer.ThrowIfPropertyNotFound)
                                 {
-                                    if (serializer.ThrowIfPropertyNotFound)
-                                    {
-                                        throw new Exception("Can not find property " + Trait.Members[i] + " in class " + Trait.ClassName);
-                                    }
+                                    throw new Exception("Can not find property " + Trait.Members[i] + " in class " + Trait.ClassName);
                                 }
-                                else
-                                { 
-                                    var value = serializer.Normalize(Values[i] );
+                            }
+                            else
+                            { 
+                                var value = serializer.Normalize(Values[i] );
 
-                                    try
-                                    {
-                                        property.SetValue(instance, value);
-                                    }
-                                    catch
-                                    {
-                                        property.SetValue(instance, Convert.ChangeType(value, property.PropertyType) );
-                                    }
+                                try
+                                {
+                                    property.SetValue(instance, value);
                                 }
-                            }                        
+                                catch
+                                {
+                                    property.SetValue(instance, Convert.ChangeType(value, property.PropertyType) );
+                                }
+                            }
                         }
                     }
                 }

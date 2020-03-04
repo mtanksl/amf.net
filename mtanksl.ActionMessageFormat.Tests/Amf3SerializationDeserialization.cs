@@ -277,39 +277,41 @@ namespace mtanksl.ActionMessageFormat.Tests
         [TestMethod]
         public void TestAmf3ExternizableObject()
         {
+            var amf3Object = new Amf3Object()
+            {
+                Trait = new Amf3Trait()
+                {
+                    ClassName = "flex.messaging.messages.CommandMessageExt",
+
+                    IsDynamic = false,
+
+                    IsExternalizable = true,
+
+                    Members = new List<string>()
+                },
+
+                Values = new List<object>(),
+
+                DynamicMembersAndValues = new Dictionary<string, object>()
+            };
+
+            var externalizable = (CommandMessageExt)amf3Object.ToObject();
+
+                externalizable.ClientId = "Client Id";
+
             var writer = new AmfWriter();
 
-                writer.WriteAmf3Object(new Amf3Object() 
-                {
-                    Trait = new Amf3Trait() 
-                    {
-                        ClassName = "DSC", 
-                        
-                        IsDynamic = false, 
-                        
-                        IsExternalizable = true,
-                        
-                        Members = new List<string>()
-                        {
-                            "clientId"
-                        }
-                    },
-
-                    Values = new List<object>()
-                    {
-                        "Client Id"
-                    },
-                    
-                    DynamicMembersAndValues = new Dictionary<string, object>()
-                } );
+                writer.WriteAmf3Object(amf3Object);
 
             var reader = new AmfReader(writer.Data);
 
-                var data = reader.ReadAmf3Object();
+            var _amf3Object = reader.ReadAmf3Object();
 
-            Assert.AreEqual("DSC", data.Trait.ClassName);
+            var _externalizable = (CommandMessageExt)_amf3Object.ToObject();
 
-            Assert.AreEqual("Client Id", data.Values[ data.Trait.Members.IndexOf("clientId") ] );
+            Assert.AreEqual("flex.messaging.messages.CommandMessageExt", _amf3Object.Trait.ClassName);
+
+            Assert.AreEqual("Client Id", _externalizable.ClientId);
         }
 
         [TestMethod]

@@ -687,15 +687,7 @@ namespace mtanksl.ActionMessageFormat
                 {
                     var externizable = (IExternalizable)value.ToObject();
 
-				        externizable.Read(this);
-
-                    value.Trait.Members.Clear();
-
-                    value.Values.Clear();
-
-                    value.DynamicMembersAndValues.Clear();
-
-                    value.FromObject(externizable);
+                        externizable.Read(this);
                 }
                 else
                 {

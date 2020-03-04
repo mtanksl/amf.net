@@ -69,6 +69,16 @@ namespace mtanksl.ActionMessageFormat
         
         private object toObject;
 
+        public T ToObject<T>()
+        {
+            return (T)ToObject();
+        }
+
+        public T ToObject<T>(AmfSerializer serializer)
+        {
+            return (T)ToObject(serializer);
+        }
+
         public object ToObject()
         {
             return ToObject(AmfSerializer.Default);

@@ -1,4 +1,4 @@
-﻿namespace mtanksl.ActionMessageFormat.Message
+﻿namespace mtanksl.ActionMessageFormat
 {
     [TraitClass("flex.messaging.io.ArrayCollection")]
     public class ArrayCollection : IExternalizable

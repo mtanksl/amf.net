@@ -447,7 +447,7 @@ namespace mtanksl.ActionMessageFormat
                         DynamicMembersAndValues = new Dictionary<string, object>() 
                     };
 
-                    amf3Rererence.Read(value);
+                    amf3Rererence.FromObject(value);
 
                     amf3References.Add(value, amf3Rererence);
                 }
@@ -618,7 +618,9 @@ namespace mtanksl.ActionMessageFormat
 
                 if (value.Trait.IsExternalizable)
                 {
-                    ( (IExternalizable)value.ToObject ).Write(this);
+                    var externizable = (IExternalizable)value.ToObject();
+
+                        externizable.Write(this);
                 }
                 else
                 {

@@ -35,7 +35,7 @@ namespace mtanksl.ActionMessageFormat.Tests
 
             var reader = new AmfReader(writer.Data);
 
-                var data = (Test)( (Amf3Object)reader.ReadAmf3() ).ToObject;
+                var data = (Test)( (Amf3Object)reader.ReadAmf3() ).ToObject();
 
             Assert.AreEqual(byte.MaxValue, data.Byte);
 

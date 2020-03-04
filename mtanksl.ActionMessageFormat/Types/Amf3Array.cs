@@ -10,7 +10,7 @@ namespace mtanksl.ActionMessageFormat
 
         public override string ToString()
         {
-            return "Array with " + StrictDense.Count.ToString() + " and " + SparseAssociative.Count + " items";
+            return "Array with " + StrictDense.Count.ToString() + " items and " + SparseAssociative.Count + " key-value pairs";
         }
     }
 }

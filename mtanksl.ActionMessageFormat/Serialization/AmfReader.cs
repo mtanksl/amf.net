@@ -685,7 +685,7 @@ namespace mtanksl.ActionMessageFormat
                 
                 if (trait.IsExternalizable)
                 {
-                    var externizable = ( (IExternalizable)value.ToObject );
+                    var externizable = (IExternalizable)value.ToObject();
 
 				        externizable.Read(this);
 
@@ -695,7 +695,7 @@ namespace mtanksl.ActionMessageFormat
 
                     value.DynamicMembersAndValues.Clear();
 
-                    value.Read(externizable);
+                    value.FromObject(externizable);
                 }
                 else
                 {

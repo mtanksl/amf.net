@@ -6,7 +6,7 @@ using System.Reflection;
 
 namespace mtanksl.ActionMessageFormat
 {
-    public class Amf3Object
+    public class Amf3Object : IAmfObject
     {
         public Amf3Trait Trait { get; set; }
 
@@ -19,7 +19,7 @@ namespace mtanksl.ActionMessageFormat
             return Trait.ToString();
         }
 
-        public void Read(object value)
+        public void FromObject(object value)
         {
             var traitClass = value.GetType().GetCustomAttributes<TraitClassAttribute>().FirstOrDefault();
 
@@ -67,148 +67,92 @@ namespace mtanksl.ActionMessageFormat
 
         private object toObject;
 
-        public object ToObject
+        public object ToObject()
         {
-            get
+            if (toObject == null)
             {
-                if (toObject == null)
+                object instance;
+
+                if (Trait.IsDynamic)
                 {
-                    try
+                    instance = new ExpandoObject();
+
+                    foreach (var item in DynamicMembersAndValues)
                     {
-                        if (Trait.IsDynamic)
+                        var value = item.Value;
+
+                        if (value is IAmfObject)
                         {
-                            var instance = new ExpandoObject();
-
-                            toObject = instance;
-
-                            foreach (var item in DynamicMembersAndValues)
-                            {
-                                var value = item.Value;
-
-                                if (value is Amf3Object)
-                                {
-                                    value = ( (Amf3Object)value ).ToObject;
-                                }
-
-                                ( ( IDictionary<string, object> )instance ).Add(item.Key, value);
-                            }
+                            value = ( (IAmfObject)value ).ToObject();
                         }
-                        else if (Trait.IsAnonymous)
+
+                        ( ( IDictionary<string, object> )instance ).Add(item.Key, value);
+                    }
+                }
+                else if (Trait.IsAnonymous)
+                {
+                    instance = new ExpandoObject();
+
+                    if (Trait.Members.Count == Values.Count)
+                    {
+                        for (int i = 0; i < Trait.Members.Count; i++)
                         {
-                            var instance = new ExpandoObject();
+                            var value = Values[i];
 
-                            toObject = instance;
-
-                            if (Trait.Members.Count == Values.Count)
+                            if (value is IAmfObject)
                             {
-                                for (int i = 0; i < Trait.Members.Count; i++)
+                                value = ( (IAmfObject)value ).ToObject();
+                            }
+
+                            ( (IDictionary<string, object> )instance ).Add(Trait.Members[i], value);
+                        }
+                    }
+                }
+                else
+                {
+                    var type = Util.GetTypeByTraitClassName(Trait.ClassName);
+
+                    if (type == null)
+                    {
+                        throw new Exception("Can not instanciate class " + Trait.ClassName);
+                    }
+                    else
+                    {
+                        instance = Activator.CreateInstance(type);
+
+                        if (Trait.Members.Count == Values.Count)
+                        {
+                            for (int i = 0; i < Trait.Members.Count; i++)
+                            {
+                                var property = type.GetProperties().Where(p => p.GetCustomAttributes<TraitMemberAttribute>().Where(a => a.Name == Trait.Members[i] ).Any() ).FirstOrDefault();
+
+                                if (property != null)
                                 {
                                     var value = Values[i];
 
-                                    if (value is Amf3Object)
+                                    if (value is IAmfObject)
                                     {
-                                        value = ( (Amf3Object)value ).ToObject;
+                                        value = ( (IAmfObject)value ).ToObject();
                                     }
 
-                                    ( ( IDictionary<string, object> )instance ).Add(Trait.Members[i], value);
-                                }
-                            }
-                        }
-                        else
-                        {
-                            Type type = null;
-
-                            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies() )
-                            {
-                                bool found = false;
-
-                                try
-                                {
-                                    foreach (var t in assembly.GetTypes() )
+                                    try
                                     {
-                                        foreach (var a in t.GetCustomAttributes<TraitClassAttribute>() )
-                                        {
-                                            if (a.Name == Trait.ClassName)
-                                            {
-                                                type = t;
-                                            
-                                                found = true;
-
-                                                break;
-                                            }
-                                        }
-
-                                        if (found)
-                                        {
-                                            break;
-                                        }
+                                        property.SetValue(instance, value);
                                     }
-                        
-                                    if (found)
+                                    catch
                                     {
-                                        break;
-                                    }
-                                }
-                                catch { }
-                            }
-
-                            if (type == null)
-                            {
-                                throw new Exception("Can not instanciate class " + Trait.ClassName);
-                            }
-                            else
-                            {
-                                var instance = Activator.CreateInstance(type);
-
-                                toObject = instance;
-
-                                if (Trait.Members.Count == Values.Count)
-                                {
-                                    for (int i = 0; i < Trait.Members.Count; i++)
-                                    {
-                                        var property = type.GetProperties()
-                                                           .Where(p => p.GetCustomAttributes<TraitMemberAttribute>()
-                                                                        .Where(a => a.Name == Trait.Members[i] )
-                                                                        .Any() )
-                                                           .FirstOrDefault();
-
-                                        if (property == null)
-                                        {
-                                            throw new Exception("Can not find property " + Trait.Members[i] + " of class " + Trait.ClassName);
-                                        }
-                                        else
-                                        {
-                                            var value = Values[i];
-
-                                            if (value is Amf3Object)
-                                            {
-                                                value = ( (Amf3Object)value ).ToObject;
-                                            }
-
-                                            try
-                                            {
-                                                property.SetValue(instance, value);
-                                            }
-                                            catch
-                                            {
-                                                 property.SetValue(instance, Convert.ChangeType(value, property.PropertyType) );
-                                            }
-                                        }
+                                        property.SetValue(instance, Convert.ChangeType(value, property.PropertyType) );
                                     }
                                 }
                             }
                         }
-                    }
-                    catch
-                    {
-                        toObject = null;
-
-                        throw;
                     }
                 }
 
-                return toObject;    
-            }   
-        }
+                toObject = instance;
+            }
+
+            return toObject; 
+        }   
     }
 }

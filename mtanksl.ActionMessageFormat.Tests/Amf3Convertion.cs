@@ -28,7 +28,7 @@ namespace mtanksl.ActionMessageFormat.Tests
 
                 value.String = "Hello World";
 
-            obj.Read(value);
+            obj.FromObject(value);
 
             Assert.AreEqual(true, obj.Trait.IsAnonymous);
 
@@ -73,7 +73,7 @@ namespace mtanksl.ActionMessageFormat.Tests
                     String = "Hello World"
                 };
 
-            obj.Read(value);
+            obj.FromObject(value);
 
             Assert.AreEqual(true, obj.Trait.IsAnonymous);
 
@@ -118,7 +118,7 @@ namespace mtanksl.ActionMessageFormat.Tests
                     String = "Hello World"
                 };
 
-            obj.Read(value);
+            obj.FromObject(value);
 
             Assert.AreEqual(false, obj.Trait.IsAnonymous);
 

@@ -1,7 +1,7 @@
 ﻿namespace mtanksl.ActionMessageFormat
 {
     [TraitClass("flex.messaging.messages.ErrorMessage")]
-    public class ErrorMessage : AsyncMessage
+    public class ErrorMessage : AcknowledgeMessage
     {
         [TraitMember("faultCode")]
         public string FaultCode { get; set; }
@@ -17,19 +17,5 @@
 
         [TraitMember("extendedData")]
         public object ExtendedData { get; set; }
-
-        public override void Read(AmfReader reader)
-        {
-            base.Read(reader);
-
-            
-        }
-
-        public override void Write(AmfWriter writer)
-        {
-            base.Write(writer);
-
-            
-        }
     }
 }

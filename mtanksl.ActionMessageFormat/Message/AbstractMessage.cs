@@ -2,7 +2,7 @@
 
 namespace mtanksl.ActionMessageFormat
 {
-    public class AbstractMessage : IExternalizable
+    public class AbstractMessage : IMessage
     {
         [TraitMember("body")]
         public object Body { get; set; }
@@ -141,7 +141,6 @@ namespace mtanksl.ActionMessageFormat
             {
                 flag2 |= 2;
             }
-
 
             if (flag2 == 0)
             {

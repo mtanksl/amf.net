@@ -1,15 +1,18 @@
 ﻿namespace mtanksl.ActionMessageFormat
 {
-    [TraitClass("DSA")]
     [TraitClass("flex.messaging.messages.AsyncMessage")]
-    [TraitClass("flex.messaging.messages.AsyncMessageExt")]
-    public class AsyncMessage : AbstractMessage
+    public class AsyncMessage : AbstractMessage, ISmallMessage
     {
         [TraitMember("correlationId")]
         public string CorrelationId { get; set; }
 
         [TraitMember("correlationIdBytes")]
         public byte[] CorrelationIdBytes { get; set; }
+
+        public virtual IMessage SmallMessage()
+        {
+            return new AsyncMessageExt(this);
+        }
 
         public override void Read(AmfReader reader)
         {

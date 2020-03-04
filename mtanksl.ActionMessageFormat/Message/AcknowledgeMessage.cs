@@ -1,10 +1,13 @@
 ﻿namespace mtanksl.ActionMessageFormat
 {
-    [TraitClass("DSK")]
     [TraitClass("flex.messaging.messages.AcknowledgeMessage")]
-    [TraitClass("flex.messaging.messages.AcknowledgeMessageExt")]
     public class AcknowledgeMessage : AsyncMessage
     {
+        public override IMessage SmallMessage()
+        {
+            return new AcknowledgeMessageExt(this);
+        }
+
         public override void Read(AmfReader reader)
         {
             base.Read(reader);

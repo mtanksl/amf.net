@@ -8,19 +8,5 @@
 
         [TraitMember("source")]
         public string Source { get; set; }
-
-        public override void Read(AmfReader reader)
-        {
-            base.Read(reader);
-
-
-        }
-
-        public override void Write(AmfWriter writer)
-        {
-            base.Write(writer);
-
-
-        }
     }
 }

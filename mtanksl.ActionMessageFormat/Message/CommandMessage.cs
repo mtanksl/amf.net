@@ -2,13 +2,16 @@
 
 namespace mtanksl.ActionMessageFormat
 {
-    [TraitClass("DSC")]
     [TraitClass("flex.messaging.messages.CommandMessage")]
-    [TraitClass("flex.messaging.messages.CommandMessageExt")]
     public class CommandMessage : AsyncMessage
     {
         [TraitMember("operation")]
         public int Operation { get; set; }
+
+        public override IMessage SmallMessage()
+        {
+            return new CommandMessageExt(this);
+        }
 
         public override void Read(AmfReader reader)
         {

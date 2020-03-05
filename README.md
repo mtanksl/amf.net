@@ -61,6 +61,6 @@ var packet = reader.ReadAmfPacket();
 
 # Object Viewer
 
-I've also implemented a custom object viewer. Please note that IExternalizable classes need the definition models within the project.
+I've also implemented a custom object viewer. Please note that IExternalizable classes need the definition models within the project. Use [TraitClass] and [TraitMember] attributes to map those classes and properties.
 
-![Object Viewer]["/ObjectViewer.png"]
+![Object Viewer][/ObjectViewer.png]

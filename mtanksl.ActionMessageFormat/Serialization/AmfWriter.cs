@@ -133,7 +133,7 @@ namespace mtanksl.ActionMessageFormat
             {
                 WriteByte( (byte)Amf0Type.Null );
             }
-            else if (value is byte || value is short || value is ushort || value is int || value is uint || value is long || value is ulong || value is decimal || value is double)
+            else if (value is byte || value is short || value is ushort || value is int || value is uint || value is long || value is ulong || value is decimal || value is float || value is double)
             {
                 WriteByte( (byte)Amf0Type.Number );
 
@@ -340,7 +340,7 @@ namespace mtanksl.ActionMessageFormat
                     WriteByte( (byte)Amf3Type.BooleanFalse );
                 }
             }
-            else if (value is byte || value is short || value is ushort || value is int || value is uint || value is long || value is ulong || value is decimal || value is double)
+            else if (value is byte || value is short || value is ushort || value is int || value is uint || value is long || value is ulong || value is decimal || value is float || value is double)
             {
                 double i = Convert.ToDouble(value);
 

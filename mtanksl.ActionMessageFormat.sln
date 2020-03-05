@@ -5,7 +5,9 @@ VisualStudioVersion = 16.0.29709.97
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "mtanksl.ActionMessageFormat", "mtanksl.ActionMessageFormat\mtanksl.ActionMessageFormat.csproj", "{C52414C6-5154-4CB3-B85B-EE27C0F935AA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mtanksl.ActionMessageFormat.Tests", "mtanksl.ActionMessageFormat.Tests\mtanksl.ActionMessageFormat.Tests.csproj", "{C040E79E-4187-407D-BB30-E6269B62D58D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "mtanksl.ActionMessageFormat.Tests", "mtanksl.ActionMessageFormat.Tests\mtanksl.ActionMessageFormat.Tests.csproj", "{C040E79E-4187-407D-BB30-E6269B62D58D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mtranksl.ActionMessageFormat.Viewer", "mtranksl.ActionMessageFormat.Viewer\mtranksl.ActionMessageFormat.Viewer.csproj", "{2816E187-7BD8-4361-B749-26F758E3C8BB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{C040E79E-4187-407D-BB30-E6269B62D58D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C040E79E-4187-407D-BB30-E6269B62D58D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C040E79E-4187-407D-BB30-E6269B62D58D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2816E187-7BD8-4361-B749-26F758E3C8BB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2816E187-7BD8-4361-B749-26F758E3C8BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2816E187-7BD8-4361-B749-26F758E3C8BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2816E187-7BD8-4361-B749-26F758E3C8BB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

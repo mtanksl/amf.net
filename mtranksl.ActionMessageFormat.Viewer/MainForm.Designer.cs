@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.panel1 = new System.Windows.Forms.Panel();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.buttonPreview = new System.Windows.Forms.Button();
@@ -50,7 +51,7 @@
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel1.Location = new System.Drawing.Point(0, 0);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(784, 561);
+            this.panel1.Size = new System.Drawing.Size(1184, 561);
             this.panel1.TabIndex = 0;
             // 
             // splitContainer1
@@ -67,16 +68,17 @@
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.Controls.Add(this.treeListViewOutput);
-            this.splitContainer1.Size = new System.Drawing.Size(784, 561);
-            this.splitContainer1.SplitterDistance = 400;
+            this.splitContainer1.Size = new System.Drawing.Size(1184, 561);
+            this.splitContainer1.SplitterDistance = 291;
             this.splitContainer1.TabIndex = 0;
             // 
             // buttonPreview
             // 
-            this.buttonPreview.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.buttonPreview.Location = new System.Drawing.Point(0, 538);
+            this.buttonPreview.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonPreview.Location = new System.Drawing.Point(3, 535);
             this.buttonPreview.Name = "buttonPreview";
-            this.buttonPreview.Size = new System.Drawing.Size(400, 23);
+            this.buttonPreview.Size = new System.Drawing.Size(285, 23);
             this.buttonPreview.TabIndex = 1;
             this.buttonPreview.Text = "Preview";
             this.buttonPreview.UseVisualStyleBackColor = true;
@@ -84,12 +86,14 @@
             // 
             // textBoxInput
             // 
-            this.textBoxInput.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.textBoxInput.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.textBoxInput.Location = new System.Drawing.Point(0, 0);
             this.textBoxInput.Multiline = true;
             this.textBoxInput.Name = "textBoxInput";
             this.textBoxInput.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.textBoxInput.Size = new System.Drawing.Size(400, 561);
+            this.textBoxInput.Size = new System.Drawing.Size(289, 529);
             this.textBoxInput.TabIndex = 0;
             // 
             // treeListViewOutput
@@ -108,7 +112,7 @@
             this.treeListViewOutput.Location = new System.Drawing.Point(0, 0);
             this.treeListViewOutput.Name = "treeListViewOutput";
             this.treeListViewOutput.ShowGroups = false;
-            this.treeListViewOutput.Size = new System.Drawing.Size(380, 561);
+            this.treeListViewOutput.Size = new System.Drawing.Size(889, 561);
             this.treeListViewOutput.TabIndex = 0;
             this.treeListViewOutput.UseCompatibleStateImageBehavior = false;
             this.treeListViewOutput.View = System.Windows.Forms.View.Details;
@@ -118,25 +122,25 @@
             // 
             this.olvColumn1.AspectName = "Name";
             this.olvColumn1.Text = "Name";
-            this.olvColumn1.Width = 100;
+            this.olvColumn1.Width = 350;
             // 
             // olvColumn2
             // 
             this.olvColumn2.AspectName = "Value";
             this.olvColumn2.Text = "Value";
-            this.olvColumn2.Width = 100;
+            this.olvColumn2.Width = 250;
             // 
             // olvColumn3
             // 
             this.olvColumn3.AspectName = "Type";
             this.olvColumn3.Text = "Type";
-            this.olvColumn3.Width = 100;
+            this.olvColumn3.Width = 250;
             // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(784, 561);
+            this.ClientSize = new System.Drawing.Size(1184, 561);
             this.Controls.Add(this.panel1);
             this.Name = "MainForm";
             this.ShowIcon = false;

@@ -34,7 +34,10 @@ namespace mtranksl.ActionMessageFormat.Viewer
                     return ( (Node)o ).Childs;
                 };
 
-                treeListViewOutput.SetObjects(new[] { Calculate("Packet", packet, packet.GetType().ToString() ) } );
+                treeListViewOutput.SetObjects(new[] {
+
+                    Calculate("Packet", packet, packet.GetType().ToString() )
+                } );
             }
             catch (Exception ex)
             {
@@ -53,7 +56,15 @@ namespace mtranksl.ActionMessageFormat.Viewer
 
             if (value == null)
             {
-                parent.Value = "";
+                parent.Value = "null";
+            }
+            else if (value is char)
+            {
+                parent.Value = "'" + value + "'";
+            }
+            else if (value is string)
+            {
+                parent.Value = "\"" + value + "\"";
             }
             else if (value is ICollection collection)
             {
@@ -67,6 +78,17 @@ namespace mtranksl.ActionMessageFormat.Viewer
             if (value == null || value is byte || value is short || value is ushort || value is int || value is uint || value is long || value is ulong || value is decimal || value is float || value is double || value is bool || value is string || value is DateTime || value is XmlDocument)
             {
 
+            }
+            else if (value is IDictionary dictionary)
+            {
+                foreach (var key in dictionary.Keys)
+                {
+                    var item = dictionary[key];
+
+                    var child = Calculate("[" + key + "]", item, item == null ? "" : item.GetType().ToString() );
+
+                    parent.Childs.Add(child);
+                }
             }
             else if (value is IEnumerable enumerable)
             {
@@ -95,15 +117,15 @@ namespace mtranksl.ActionMessageFormat.Viewer
                 if (method != null)
                 {
                     method.Invoke(value, null);
-                }
 
-                var field = value.GetType().GetField("toObject", BindingFlags.Instance | BindingFlags.NonPublic);
+                    var field = value.GetType().GetField("toObject", BindingFlags.Instance | BindingFlags.NonPublic);
 
-                if (field != null)
-                {
-                    var child = Calculate(field.Name, field.GetValue(value), field.FieldType.ToString() );
+                    if (field != null)
+                    {
+                        var child = Calculate(field.Name, field.GetValue(value), field.FieldType.ToString() );
 
-                    parent.Childs.Add(child);
+                        parent.Childs.Add(child);
+                    }
                 }
             }
 

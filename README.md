@@ -9,7 +9,7 @@ I actually never used Flash and had no knowledge of it's build in communication 
 It turns out that I had to automate a creepy old software written in Flash.
 Since I did not found any good library, I've written my own.
 
-# Audience?
+# Audience
 
 Probably nobody. 
 But hey, It is fun to learn and implement a protocol. 
@@ -34,7 +34,7 @@ writer.WriteAmfPacket(new AmfPacket()
         {
             TargetUri = "null",
             ResponseUri = "/1",
-            Data = new CommandMessage()
+            Data = new CommandMessageExt()
             {
                 Operation = 5,
                 CorrelationId = "",
@@ -58,3 +58,9 @@ var reader = new AmfReader(writer.Data);
 
 var packet = reader.ReadAmfPacket();
 ```
+
+# Object Viewer
+
+I've also implemented a custom object viewer. Please note that IExternalizable classes need the definition models within the project.
+
+![Object Viewer]["/ObjectViewer.png"]

@@ -121,18 +121,21 @@
             // olvColumn1
             // 
             this.olvColumn1.AspectName = "Name";
+            this.olvColumn1.Sortable = false;
             this.olvColumn1.Text = "Name";
             this.olvColumn1.Width = 350;
             // 
             // olvColumn2
             // 
             this.olvColumn2.AspectName = "Value";
+            this.olvColumn2.Sortable = false;
             this.olvColumn2.Text = "Value";
             this.olvColumn2.Width = 250;
             // 
             // olvColumn3
             // 
             this.olvColumn3.AspectName = "Type";
+            this.olvColumn3.Sortable = false;
             this.olvColumn3.Text = "Type";
             this.olvColumn3.Width = 250;
             // 

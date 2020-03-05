@@ -513,7 +513,14 @@ namespace mtanksl.ActionMessageFormat
 
             byte valueD = ReadByte();
 
-            return (valueA & 0x7F) << 22 | (valueB & 0x7F) << 15 | (valueC & 0x7F) << 8 | valueD;
+            int ret = (valueA & 0x7F) << 22 | (valueB & 0x7F) << 15 | (valueC & 0x7F) << 8 | valueD;
+            
+            if ( (ret & 268435456) == 268435456)
+            {
+                ret = ret | -536870912;
+            }
+
+            return ret;
         }
 
         public string ReadAmf3String()

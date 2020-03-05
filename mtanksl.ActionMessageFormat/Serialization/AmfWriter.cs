@@ -8,10 +8,10 @@ namespace mtanksl.ActionMessageFormat
 {
     public class AmfWriter
     {
-        public const int MinAmf3UInt29Value = 0;
+        public const int MinAmf3UInt29Value = -268435456;
 
-        public const int MaxAmf3UInt29Value = 536870911;
-
+        public const int MaxAmf3UInt29Value = 268435455;
+        
         public const int MaxAmf0StringLength = 65535;
 
         private List<byte> data = new List<byte>();
@@ -133,7 +133,7 @@ namespace mtanksl.ActionMessageFormat
             {
                 WriteByte( (byte)Amf0Type.Null );
             }
-            else if (value is byte || value is short || value is ushort || value is int || value is uint || value is long || value is ulong || value is decimal || value is float || value is double)
+            else if (value is sbyte || value is byte || value is short || value is ushort || value is int || value is uint || value is long || value is ulong || value is decimal || value is float || value is double)
             {
                 WriteByte( (byte)Amf0Type.Number );
 
@@ -340,9 +340,9 @@ namespace mtanksl.ActionMessageFormat
                     WriteByte( (byte)Amf3Type.BooleanFalse );
                 }
             }
-            else if (value is byte || value is short || value is ushort || value is int || value is uint || value is long || value is ulong || value is decimal || value is float || value is double)
+            else if (value is sbyte || value is byte || value is short || value is ushort || value is int || value is uint)
             {
-                double i = Convert.ToDouble(value);
+                int i = Convert.ToInt32(value);
 
                 if (i < MinAmf3UInt29Value || i > MaxAmf3UInt29Value)
                 {
@@ -354,8 +354,14 @@ namespace mtanksl.ActionMessageFormat
                 {
                     WriteByte( (byte)Amf3Type.Integer);
 
-                    WriteAmf3UInt29( Convert.ToInt32(value) );
+                    WriteAmf3UInt29(i);
                 }
+            }
+            else if (value is long || value is ulong || value is decimal || value is float || value is double)
+            {
+                WriteByte( (byte)Amf3Type.Double);
+
+                WriteDouble( Convert.ToDouble(value) );
             }
             else if (value is string)
             {
@@ -458,17 +464,19 @@ namespace mtanksl.ActionMessageFormat
 
         public void WriteAmf3UInt29(int value)
         {
-            if (value >= 0x00 && value <= 0x7F)
+            value = value & 0x1FFFFFFF;
+
+            if (value <= 0x7F)
             {
                 WriteByte( (byte)( ( ( value >> 0 ) & 0x7F) | 0x00 ) );
             }
-            else if (value >= 0x80 && value <= 0x3FFF)
+            else if (value <= 0x3FFF)
             {
                 WriteByte( (byte)( ( ( value >> 7 ) & 0x7F) | 0x80 ) );
 
                 WriteByte( (byte)( ( ( value >> 0 ) & 0x7F) | 0x00 ) );
             }
-            else if (value >= 0x4000 && value <= 0x1FFFFF)
+            else if (value <= 0x1FFFFF)
             {
                 WriteByte( (byte)( ( ( value >> 14 ) & 0x7F) | 0x80 ) );
 
@@ -476,7 +484,7 @@ namespace mtanksl.ActionMessageFormat
 
                 WriteByte( (byte)( ( ( value >> 0 ) & 0x7F) | 0x00 ) );
             }
-            else if (value >= 0x200000 && value <= 0x3FFFFFFF)
+            else
             {
                 WriteByte( (byte)( ( ( value >> 22 ) & 0x7F) | 0x80 ) );
 
@@ -485,10 +493,6 @@ namespace mtanksl.ActionMessageFormat
                 WriteByte( (byte)( ( ( value >> 8 ) & 0x7F) | 0x80 ) );
 
                 WriteByte( (byte)( ( ( value >> 0 ) & 0xFF) | 0x00 ) );
-            }
-            else
-            {
-                throw new IndexOutOfRangeException();
             }
         }
 

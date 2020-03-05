@@ -75,7 +75,7 @@ namespace mtranksl.ActionMessageFormat.Viewer
                 parent.Value = value.ToString();
             }
 
-            if (value == null || value is byte || value is short || value is ushort || value is int || value is uint || value is long || value is ulong || value is decimal || value is float || value is double || value is bool || value is string || value is DateTime || value is XmlDocument)
+            if (value == null || value is sbyte || value is byte || value is short || value is ushort || value is int || value is uint || value is long || value is ulong || value is decimal || value is float || value is double || value is bool || value is string || value is DateTime || value is XmlDocument)
             {
 
             }

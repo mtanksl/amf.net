@@ -36,7 +36,7 @@ namespace mtanksl.ActionMessageFormat
                 {
                     var traitMember = property.GetCustomAttribute<TraitMemberAttribute>();
 
-                    if (traitMember != null)
+                    if (traitMember != null && traitMember.Serializable)
                     {
                         Trait.Members.Add(traitMember.Name);
 

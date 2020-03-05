@@ -42,7 +42,7 @@ namespace mtanksl.ActionMessageFormat
                 {
                     var traitMember = property.GetCustomAttribute<TraitMemberAttribute>();
 
-                    if (traitMember != null)
+                    if (traitMember != null && traitMember.Serializable)
                     {
                         DynamicMembersAndValues.Add(traitMember.Name, property.GetValue(value) );
                     }

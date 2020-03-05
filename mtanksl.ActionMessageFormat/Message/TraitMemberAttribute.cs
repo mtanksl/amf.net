@@ -20,5 +20,7 @@ namespace mtanksl.ActionMessageFormat
                 return name;
             }
         }
+
+        public bool Serializable { get; set; } = true;
     }
 }

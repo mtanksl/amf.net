@@ -61,6 +61,18 @@ var packet = reader.ReadAmfPacket();
 
 # Object Viewer
 
-I've also implemented a custom object viewer. Please note that IExternalizable classes need the definition models within the project. Use [TraitClass] and [TraitMember] attributes to map those classes and properties.
+I've also implemented a custom object viewer. 
+Please note that IExternalizable classes need the definition models within the project. 
+Use [TraitClass] and [TraitMember] attributes to map custom classes and properties.
 
 ![Object Viewer](/ObjectViewer.png)
+
+# Fiddler Inspector
+
+I've also implemented a custom Fiddler Inspector. 
+Please note that IExternalizable classes need the definition models within the project. 
+Use [TraitClass] and [TraitMember] attributes to map custom classes and properties.
+To build, add a reference to C:\Users\<USER>\AppData\Local\Programs\Fiddler\Fiddler.exe
+After build, copy all dlls to C:\Users\<USER>\Documents\Fiddler2\Inspectors\
+
+![Fiddler Inspector](/FiddlerInspector.png)

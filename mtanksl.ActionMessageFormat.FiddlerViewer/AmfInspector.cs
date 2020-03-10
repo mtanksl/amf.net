@@ -9,12 +9,28 @@ namespace mtanksl.ActionMessageFormat.FiddlerViewer
     {
         private AmfViewer control;
 
+        private bool visible;
+
         public AmfRequestInspector()
         {
             control = new AmfViewer();
         }
 
-        public HTTPRequestHeaders headers { get; set; }
+        private HTTPRequestHeaders _headers;
+
+        public HTTPRequestHeaders headers
+        {
+            get
+            {
+                return _headers;
+            }
+            set
+            {
+                _headers = value;
+
+                visible = _headers.ExistsAndEquals("content-type", "application/x-amf");
+            }
+        }
 
         private byte[] _body;
 
@@ -28,7 +44,10 @@ namespace mtanksl.ActionMessageFormat.FiddlerViewer
             {
                 _body = value;
 
-                control.Body = _body;
+                if (visible)
+                {
+                    control.Body = _body;
+                }
             }
         }
 
@@ -52,7 +71,7 @@ namespace mtanksl.ActionMessageFormat.FiddlerViewer
 
         public void Clear()
         {
-            
+            control.Dispose();
         }
     }
 
@@ -60,12 +79,28 @@ namespace mtanksl.ActionMessageFormat.FiddlerViewer
     {
         private AmfViewer control;
 
+        private bool visible;
+
         public AmfResponseInspector()
         {
             control = new AmfViewer();
         }
 
-        public HTTPResponseHeaders headers { get; set; }
+        private HTTPResponseHeaders _headers;
+
+        public HTTPResponseHeaders headers
+        {
+            get
+            {
+                return _headers;
+            }
+            set
+            {
+                _headers = value;
+
+                visible = _headers.ExistsAndEquals("content-type", "application/x-amf;charset=UTF-8");
+            }
+        }
 
         private byte[] _body;
 
@@ -79,7 +114,10 @@ namespace mtanksl.ActionMessageFormat.FiddlerViewer
             {
                 _body = value;
 
-                control.Body = _body;
+                if (visible)
+                {
+                    control.Body = _body;
+                }
             }
         }
 
@@ -103,7 +141,7 @@ namespace mtanksl.ActionMessageFormat.FiddlerViewer
 
         public void Clear()
         {
-
+            control.Dispose();
         }
     }
 }

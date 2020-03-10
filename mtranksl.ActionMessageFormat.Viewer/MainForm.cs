@@ -45,7 +45,7 @@ namespace mtranksl.ActionMessageFormat.Viewer
             }
         }
 
-        public Node Calculate(string name, object value, string type)
+        private Node Calculate(string name, object value, string type)
         {
             var parent = new Node() 
             {

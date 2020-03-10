@@ -56,7 +56,7 @@ namespace mtanksl.ActionMessageFormat.FiddlerViewer
             }
         }
 
-        public Node Calculate(string name, object value, string type)
+        private Node Calculate(string name, object value, string type)
         {
             var parent = new Node() 
             {
@@ -141,6 +141,16 @@ namespace mtanksl.ActionMessageFormat.FiddlerViewer
             }
 
             return parent;
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            treeListViewOutput.ExpandAll();
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            treeListViewOutput.CollapseAll();
         }
     }
 

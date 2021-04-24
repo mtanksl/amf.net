@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.panel1 = new System.Windows.Forms.Panel();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.buttonPreview = new System.Windows.Forms.Button();
@@ -95,6 +96,7 @@
             this.textBoxInput.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.textBoxInput.Size = new System.Drawing.Size(289, 529);
             this.textBoxInput.TabIndex = 0;
+            this.textBoxInput.Text = resources.GetString("textBoxInput.Text");
             // 
             // treeListViewOutput
             // 

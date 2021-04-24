@@ -22,6 +22,11 @@ namespace mtanksl.ActionMessageFormat
 
         private List<Amf3Trait> traits = new List<Amf3Trait>();
         
+        public bool CanReadByte()
+        {
+            return offset < data.Length;
+        }
+
         public byte ReadByte()
         {
             var value = data[offset];

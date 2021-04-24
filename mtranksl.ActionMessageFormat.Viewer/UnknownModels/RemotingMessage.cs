@@ -6,7 +6,7 @@ namespace mtranksl.ActionMessageFormat.Viewer.UnknownModels
     public class RemotingMessage
     {
         [TraitMember("operation")]
-        public object Operation { get; set; } //
+        public object Operation { get; set; } // string?
 
         [TraitMember("source")]
         public object Source { get; set; }
@@ -15,7 +15,7 @@ namespace mtranksl.ActionMessageFormat.Viewer.UnknownModels
         public object Timestamp { get; set; }
 
         [TraitMember("destination")]
-        public object Destination { get; set; } //
+        public object Destination { get; set; } // string?
 
         [TraitMember("body")]
         public object Body { get; set; }
@@ -30,6 +30,6 @@ namespace mtranksl.ActionMessageFormat.Viewer.UnknownModels
         public object MessageId { get; set; }
 
         [TraitMember("timeToLive")]
-        public object TimeToLive { get; set; }
+        public object TimeToLive { get; set; } // string?
     }
 }

@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "mtanksl.ActionMessageFormat
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "mtanksl.ActionMessageFormat.Tests", "mtanksl.ActionMessageFormat.Tests\mtanksl.ActionMessageFormat.Tests.csproj", "{C040E79E-4187-407D-BB30-E6269B62D58D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mtranksl.ActionMessageFormat.Viewer", "mtranksl.ActionMessageFormat.Viewer\mtranksl.ActionMessageFormat.Viewer.csproj", "{2816E187-7BD8-4361-B749-26F758E3C8BB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mtanksl.ActionMessageFormat.Viewer", "mtranksl.ActionMessageFormat.Viewer\mtanksl.ActionMessageFormat.Viewer.csproj", "{2816E187-7BD8-4361-B749-26F758E3C8BB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mtanksl.ActionMessageFormat.FiddlerViewer", "mtanksl.ActionMessageFormat.FiddlerViewer\mtanksl.ActionMessageFormat.FiddlerViewer.csproj", "{F615420F-0080-4283-B126-826BECCE5809}"
 EndProject

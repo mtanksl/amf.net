@@ -17,13 +17,7 @@ I kind liked this one (but no, I will never use it again).
 
 # Specification
 
-Here is the official [Action Message Format AMF0 Specification](https://www.adobe.com/content/dam/acom/en/devnet/pdf/amf0-file-format-specification.pdf) and [Action Message Format AMF3 Specification](https://www.adobe.com/content/dam/acom/en/devnet/pdf/amf-file-format-spec.pdf).
-
-Edited: The link is now broken
-
-![AMF0](/amf0.pdf)
-
-![AMF3](/amf3.pdf)
+Here is the official ![Action Message Format AMF0 Specification](/amf0.pdf) and ![Action Message Format AMF3 Specification](/amf3.pdf).
 
 # How to serialize an object
 

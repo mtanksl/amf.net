@@ -72,7 +72,7 @@ namespace mtanksl.ActionMessageFormat
             return (T)ToObject();
         }
 
-        public T ToObject<T>(AmfSerializer serializer)
+        public T ToObject<T>(IAmfSerializer serializer)
         {
             return (T)ToObject(serializer);
         }
@@ -82,7 +82,7 @@ namespace mtanksl.ActionMessageFormat
             return ToObject(AmfSerializer.Default);
         }
 
-        public object ToObject(AmfSerializer serializer)
+        public object ToObject(IAmfSerializer serializer)
         {
             if (toObject == null)
             {

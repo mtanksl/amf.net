@@ -5,13 +5,15 @@ using System.Reflection;
 
 namespace mtanksl.ActionMessageFormat
 {
-    public class AmfSerializer
+    public class AmfSerializer : IAmfSerializer
     {
+        private static AmfSerializer _default = new AmfSerializer();
+
         public static AmfSerializer Default
         {
             get
             {
-                return new AmfSerializer() { ThrowIfPropertyNotFound = false };
+                return _default;
             }
         }
 

@@ -4,10 +4,10 @@
     {
         T ToObject<T>();
 
-        T ToObject<T>(AmfSerializer serializer);
+        T ToObject<T>(IAmfSerializer serializer);
 
         object ToObject();
 
-        object ToObject(AmfSerializer serializer);       
+        object ToObject(IAmfSerializer serializer);       
     }
 }

@@ -2,6 +2,13 @@
 
 An implementation in C# of both AMF0 and AMF3 binary format that is used to serialize ActionScript object graphs.
 
+# Install using NuGet
+![Nuget](https://img.shields.io/nuget/v/mtanksl.ActionMessageFormat)
+
+```
+dotnet add package mtanksl.ActionMessageFormat --version 1.0.4
+```
+
 # Why?
 
 So, Flash is dead and Adobe will end support of Flash Player on December 31, 2020. 
